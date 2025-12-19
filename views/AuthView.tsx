@@ -26,8 +26,7 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
 
     try {
       if (type === 'signup') {
-        // No cadastro, enviamos os dados extras em options.data (metadata)
-        // O Database Trigger que configuramos no SQL Editor vai ler isso e criar o perfil.
+        // Envia dados para o trigger criar o perfil automaticamente
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -41,10 +40,14 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
 
         if (signUpError) throw signUpError;
         
+        // Se o "Confirm email" estiver desativado no Supabase, 
+        // o authData.session existirá imediatamente.
         if (authData.session) {
-          alert("Cadastro realizado com sucesso!");
+          // O listener no App.tsx detectará a mudança de estado e navegará automaticamente.
+          console.log("Cadastro e login automáticos realizados.");
         } else {
-          alert("Verifique seu e-mail para confirmar o cadastro!");
+          // Caso o usuário ainda não tenha desativado no dashboard
+          setError("A confirmação de e-mail ainda está ativa no seu Supabase. Desative-a em Authentication -> Settings.");
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -54,7 +57,11 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
         if (signInError) throw signInError;
       }
     } catch (err: any) {
-      setError(err.message === 'Database error saving new user' ? 'Erro ao criar perfil. Tente outro nome de empresa.' : err.message);
+      if (err.message.includes('unique constraint') || err.message.includes('slug')) {
+        setError('Este nome de empresa já está em uso. Escolha outro.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
