@@ -26,31 +26,25 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
 
     try {
       if (type === 'signup') {
+        // No cadastro, enviamos os dados extras em options.data (metadata)
+        // O Database Trigger que configuramos no SQL Editor vai ler isso e criar o perfil.
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
+          options: {
+            data: {
+              full_name: formData.name,
+              business_name: formData.businessName
+            }
+          }
         });
 
         if (signUpError) throw signUpError;
-
-        if (authData.user) {
-          // Criar Perfil Profissional no Banco (Snake Case columns)
-          const { error: profError } = await supabase.from('professionals').insert([{
-            id: authData.user.id,
-            name: formData.name,
-            business_name: formData.businessName,
-            slug: formData.businessName.toLowerCase().replace(/\s+/g, '-'),
-            email: formData.email
-          }]);
-
-          if (profError) throw profError;
-
-          // Criar Configuração Inicial
-          await supabase.from('business_config').insert([{
-            professional_id: authData.user.id,
-            interval: 60,
-            expediente: []
-          }]);
+        
+        if (authData.session) {
+          alert("Cadastro realizado com sucesso!");
+        } else {
+          alert("Verifique seu e-mail para confirmar o cadastro!");
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -60,7 +54,7 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
         if (signInError) throw signInError;
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message === 'Database error saving new user' ? 'Erro ao criar perfil. Tente outro nome de empresa.' : err.message);
     } finally {
       setLoading(false);
     }
