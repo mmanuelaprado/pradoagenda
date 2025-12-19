@@ -34,7 +34,7 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
         if (signUpError) throw signUpError;
 
         if (authData.user) {
-          // Criar Perfil Profissional no Banco
+          // Criar Perfil Profissional no Banco (Snake Case columns)
           const { error: profError } = await supabase.from('professionals').insert([{
             id: authData.user.id,
             name: formData.name,
