@@ -3,7 +3,7 @@ const CACHE_NAME = 'prado-agenda-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './favicon.png'
+  './favicon/favicon.png'
 ];
 
 self.addEventListener('install', (event) => {
