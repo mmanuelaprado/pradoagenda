@@ -117,7 +117,7 @@ const App: React.FC = () => {
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
       <Sidebar activeView={currentView} navigate={(v: View) => setCurrentView(v)} onLogout={handleLogout} />
       <div className="flex-grow flex flex-col">
-        <MobileHeader user={user} navigate={(v: View) => setCurrentView(v)} />
+        <MobileHeader user={user} navigate={(v: View) => setCurrentView(v)} onLogout={handleLogout} />
         <div className="flex-grow">
           {renderCurrentView()}
         </div>

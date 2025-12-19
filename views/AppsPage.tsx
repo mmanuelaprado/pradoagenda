@@ -3,7 +3,6 @@ import React from 'react';
 import { Icons } from '../constants.tsx';
 import { Professional, View } from '../types.ts';
 
-// Added Props interface to handle commonProps spread
 interface AppsPageProps {
   user: Professional | null;
   onLogout: () => void;
@@ -12,7 +11,17 @@ interface AppsPageProps {
 
 const AppsPage: React.FC<AppsPageProps> = ({ user, onLogout, navigate }) => {
   return (
-    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full">
+    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full pb-24 md:pb-10">
+      <button 
+        onClick={() => navigate('dashboard')}
+        className="flex items-center text-gray-400 hover:text-[#FF1493] mb-6 transition-colors font-black text-[10px] uppercase tracking-[0.2em] group"
+      >
+        <span className="mr-2 group-hover:-translate-x-1 transition-transform">
+          <Icons.ArrowLeft />
+        </span>
+        Voltar ao Painel
+      </button>
+
       <header className="mb-10">
         <h1 className="text-3xl font-black text-black tracking-tight uppercase">Baixar Apps</h1>
         <p className="text-gray-500 font-medium">Leve o Prado Agenda no seu bolso e receba notificações em tempo real.</p>

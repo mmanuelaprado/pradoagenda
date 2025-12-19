@@ -5,14 +5,23 @@ import { Professional, View } from '../types.ts';
 
 interface RecurringPageProps {
   user: Professional | null;
-  // Added missing onLogout to match commonProps in App.tsx
   onLogout: () => void;
   navigate: (v: View) => void;
 }
 
 const RecurringPage: React.FC<RecurringPageProps> = ({ user, navigate, onLogout }) => {
   return (
-    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full">
+    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full pb-24 md:pb-10">
+      <button 
+        onClick={() => navigate('dashboard')}
+        className="flex items-center text-gray-400 hover:text-[#FF1493] mb-6 transition-colors font-black text-[10px] uppercase tracking-[0.2em] group"
+      >
+        <span className="mr-2 group-hover:-translate-x-1 transition-transform">
+          <Icons.ArrowLeft />
+        </span>
+        Voltar ao Painel
+      </button>
+
       <header className="mb-10">
         <h1 className="text-3xl font-black text-black tracking-tight uppercase">Agendamento Recorrente</h1>
         <p className="text-gray-500 font-medium">Automatize horários para clientes que frequentam seu espaço toda semana.</p>

@@ -6,9 +6,10 @@ import { View, Professional } from '../types.ts';
 interface MobileHeaderProps {
   user: Professional | null;
   navigate: (v: View) => void;
+  onLogout: () => void;
 }
 
-const MobileHeader: React.FC<MobileHeaderProps> = ({ user, navigate }) => {
+const MobileHeader: React.FC<MobileHeaderProps> = ({ user, navigate, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -28,7 +29,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ user, navigate }) => {
             <span className="text-xl font-bold uppercase tracking-widest text-[#FF1493]">Menu</span>
             <button onClick={() => setIsOpen(false)} className="text-white text-2xl">✕</button>
           </div>
-          <nav className="flex-grow space-y-4 overflow-y-auto pb-10 custom-scrollbar">
+          <nav className="flex-grow space-y-3 overflow-y-auto pb-6 custom-scrollbar">
             {[
               { view: 'dashboard', label: 'Início', icon: Icons.Home },
               { view: 'agenda', label: 'Agenda', icon: Icons.Calendar },
@@ -45,13 +46,23 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ user, navigate }) => {
               <button
                 key={item.view}
                 onClick={() => { navigate(item.view as View); setIsOpen(false); }}
-                className="w-full flex items-center space-x-4 p-4 bg-white/5 rounded-2xl text-left"
+                className="w-full flex items-center space-x-4 p-4 bg-white/5 rounded-2xl text-left hover:bg-white/10 transition-colors"
               >
                 <item.icon />
-                <span className="font-bold">{item.label}</span>
+                <span className="font-bold text-sm">{item.label}</span>
               </button>
             ))}
           </nav>
+          
+          <div className="pt-6 border-t border-white/10">
+            <button 
+              onClick={() => { onLogout(); setIsOpen(false); }}
+              className="w-full bg-[#FF1493] text-white p-5 rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center space-x-3 shadow-2xl shadow-pink-900/40 active:scale-95 transition-all"
+            >
+              <Icons.Logout />
+              <span>Sair da Conta</span>
+            </button>
+          </div>
         </div>
       )}
     </header>

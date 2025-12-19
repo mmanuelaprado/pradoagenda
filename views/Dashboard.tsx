@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Professional, Appointment, Service, View } from '../types.ts';
 import { Icons } from '../constants.tsx';
-import Sidebar from '../Sidebar.tsx';
 
 interface DashboardProps {
   user: Professional | null;
@@ -15,7 +14,6 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onUpdateStatus, onLogout, navigate }) => {
   const [copied, setCopied] = useState(false);
-  
   const bookingUrl = `pradoagenda.com/b/${user?.slug || 'demo'}`;
 
   const handleCopy = () => {
@@ -27,143 +25,117 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
   const todayAppts = appointments.filter(a => new Date(a.date).toDateString() === new Date().toDateString());
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <Sidebar activeView="dashboard" navigate={navigate} onLogout={onLogout} />
-
-      <main className="flex-grow p-4 md:p-10 max-w-7xl mx-auto w-full pb-24 md:pb-10">
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-6">
-          <div className="animate-fade-in">
-            <h1 className="text-4xl font-black text-black tracking-tighter uppercase mb-1">Olá, {user?.name.split(' ')[0]}!</h1>
-            <p className="text-gray-500 font-medium tracking-tight">O mercado da beleza não para. Sua agenda também não.</p>
-          </div>
-          
-          <div className="flex items-center bg-white border border-gray-100 rounded-[2.5rem] p-3 pl-8 shadow-xl shadow-gray-200/50 group animate-fade-in">
-            <div className="flex flex-col mr-8">
-              <span className="text-[10px] text-gray-300 uppercase font-black tracking-widest mb-1">Seu Link Público</span>
-              <span className="text-sm font-bold text-black truncate max-w-[200px]">{bookingUrl}</span>
-            </div>
-            <button 
-              onClick={handleCopy} 
-              className={`p-5 rounded-3xl transition-all flex items-center justify-center space-x-3 active:scale-95 ${
-                copied ? 'bg-green-500 text-white' : 'bg-[#FF1493] text-white hover:bg-pink-700'
-              }`}
-            >
-              <Icons.Copy />
-              <span className="text-[10px] font-black uppercase tracking-widest pr-2">{copied ? 'Copiado' : 'Copiar'}</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-           {[
-             { label: 'Novo Agendamento', icon: Icons.Plus, color: 'bg-black', view: 'agenda' },
-             { label: 'Criar Marketing', icon: Icons.Brain, color: 'bg-[#FF1493]', view: 'marketing' },
-             { label: 'Gerir Equipe', icon: Icons.Users, color: 'bg-gray-800', view: 'professionals' },
-             { label: 'Configurações', icon: Icons.Settings, color: 'bg-gray-400', view: 'settings' }
-           ].map((act, i) => (
-             <button 
-              key={i} 
-              onClick={() => navigate(act.view as View)}
-              className={`${act.color} text-white p-8 rounded-[2.5rem] flex flex-col items-start justify-between shadow-2xl hover:-translate-y-2 transition-all group`}
-             >
-                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <act.icon />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-left mt-6 leading-tight">{act.label}</span>
-             </button>
-           ))}
+    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full pb-20 md:pb-10">
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 md:mb-12 gap-4">
+        <div className="animate-fade-in text-center md:text-left">
+          <h1 className="text-2xl md:text-4xl font-black text-black tracking-tighter uppercase mb-1">Olá, {user?.name.split(' ')[0]}!</h1>
+          <p className="text-xs md:text-sm text-gray-500 font-medium tracking-tight">O mercado da beleza não para. Sua agenda também não.</p>
         </div>
+        
+        <div className="flex items-center bg-white border border-gray-100 rounded-2xl md:rounded-[2.5rem] p-2 md:p-3 pl-4 md:pl-8 shadow-sm group animate-fade-in">
+          <div className="flex flex-col mr-4 md:mr-8 overflow-hidden">
+            <span className="text-[8px] md:text-[10px] text-gray-300 uppercase font-black tracking-widest mb-0.5">Seu Link Público</span>
+            <span className="text-[10px] md:text-sm font-bold text-black truncate max-w-[120px] md:max-w-[200px]">{bookingUrl}</span>
+          </div>
+          <button 
+            onClick={handleCopy} 
+            className={`p-3 md:p-5 rounded-xl md:rounded-3xl transition-all flex items-center justify-center space-x-2 active:scale-95 ${
+              copied ? 'bg-green-500 text-white' : 'bg-[#FF1493] text-white'
+            }`}
+          >
+            <Icons.Copy className="w-4 h-4" />
+            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest pr-1">{copied ? 'OK' : 'Link'}</span>
+          </button>
+        </div>
+      </header>
 
-        {/* Main Dashboard Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
-          
-          {/* Left Column: Metrics & Alerts */}
-          <div className="xl:col-span-4 space-y-10">
-            <div className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-gray-100">
-               <h3 className="text-sm font-black text-black uppercase tracking-widest mb-8 flex items-center gap-2">
-                 <Icons.Finance /> Performance do Dia
-               </h3>
-               <div className="space-y-8">
+      {/* Quick Actions Grid - Smaller on Mobile */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
+         {[
+           { label: 'Novo Agend.', icon: Icons.Plus, color: 'bg-black', view: 'agenda' },
+           { label: 'Marketing AI', icon: Icons.Brain, color: 'bg-[#FF1493]', view: 'marketing' },
+           { label: 'Minha Equipe', icon: Icons.Users, color: 'bg-gray-800', view: 'professionals' },
+           { label: 'Ajustes', icon: Icons.Settings, color: 'bg-gray-400', view: 'settings' }
+         ].map((act, i) => (
+           <button 
+            key={i} 
+            onClick={() => navigate(act.view as View)}
+            className={`${act.color} text-white p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] flex flex-col items-start justify-between shadow-lg active:scale-95 transition-all`}
+           >
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                <act.icon className="w-4 h-4 md:w-5 md:h-5" />
+              </div>
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-left mt-4 leading-tight">{act.label}</span>
+           </button>
+         ))}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-10">
+        <div className="xl:col-span-4 space-y-6 md:space-y-10">
+          <div className="bg-white p-6 md:p-10 rounded-2xl md:rounded-[3.5rem] shadow-sm border border-gray-100">
+             <h3 className="text-[10px] md:text-sm font-black text-black uppercase tracking-widest mb-6 md:mb-8 flex items-center gap-2">
+               <Icons.Finance className="w-4 h-4 md:w-5 md:h-5" /> Performance
+             </h3>
+             <div className="space-y-6 md:space-y-8">
+               <div>
+                 <p className="text-gray-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1">Receita Prevista</p>
+                 <p className="text-2xl md:text-4xl font-black text-black tracking-tighter">
+                   R$ {todayAppts.reduce((acc, curr) => acc + (services.find(s => s.id === curr.serviceId)?.price || 0), 0)}
+                 </p>
+               </div>
+               <div className="grid grid-cols-2 gap-2 pt-6 border-t border-gray-50">
                  <div>
-                   <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Receita Prevista</p>
-                   <p className="text-4xl font-black text-black tracking-tighter">
-                     R$ {todayAppts.reduce((acc, curr) => acc + (services.find(s => s.id === curr.serviceId)?.price || 0), 0)}
-                   </p>
+                   <p className="text-gray-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1">Visitas</p>
+                   <p className="text-xl md:text-2xl font-black text-black">{todayAppts.length}</p>
                  </div>
-                 <div className="grid grid-cols-2 gap-4 pt-8 border-t border-gray-50">
-                   <div>
-                     <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Atendimentos</p>
-                     <p className="text-2xl font-black text-black">{todayAppts.length}</p>
-                   </div>
-                   <div>
-                     <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Pendentes</p>
-                     <p className="text-2xl font-black text-[#FF1493]">{appointments.filter(a => a.status === 'pending').length}</p>
-                   </div>
+                 <div>
+                   <p className="text-gray-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1">Pendentes</p>
+                   <p className="text-xl md:text-2xl font-black text-[#FF1493]">{appointments.filter(a => a.status === 'pending').length}</p>
                  </div>
                </div>
-            </div>
-
-            <div className="bg-black p-10 rounded-[3.5rem] shadow-2xl text-white relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-150 transition-transform duration-1000">
-                 <Icons.Sparkles />
-               </div>
-               <h3 className="text-sm font-black uppercase tracking-widest mb-4">Dica do Especialista</h3>
-               <p className="text-gray-400 font-medium text-sm leading-relaxed mb-6">
-                 "Você tem 3 horários vagos hoje à tarde. Que tal gerar uma promoção rápida usando IA no menu de Marketing?"
-               </p>
-               <button onClick={() => navigate('marketing')} className="text-[#FF1493] font-black text-[10px] uppercase tracking-widest hover:underline">Otimizar minha agenda agora →</button>
-            </div>
+             </div>
           </div>
-
-          {/* Right Column: Recent Appointments */}
-          <div className="xl:col-span-8">
-            <div className="bg-white rounded-[4rem] shadow-sm border border-gray-100 overflow-hidden h-full">
-              <div className="p-10 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-                <h2 className="text-xl font-black text-black tracking-tight uppercase">Próximas Visitas</h2>
-                <button onClick={() => navigate('agenda')} className="text-[10px] font-black uppercase tracking-widest text-[#FF1493] hover:underline">Acessar Agenda Completa</button>
-              </div>
-              <div className="divide-y divide-gray-50">
-                {appointments.length > 0 ? appointments.slice(0, 6).map((appt) => (
-                  <div key={appt.id} className="p-10 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-gray-50 transition-all group">
-                    <div className="flex items-center space-x-6">
-                      <div className="w-16 h-16 bg-pink-50 rounded-[2rem] flex items-center justify-center text-[#FF1493] text-xl font-black group-hover:bg-[#FF1493] group-hover:text-white transition-all shadow-sm">
-                        {appt.clientName.charAt(0)}
-                      </div>
-                      <div>
-                        <h4 className="font-black text-black text-lg tracking-tight uppercase">{appt.clientName}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{appt.clientPhone}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-8 mt-6 sm:mt-0">
-                       <div className="flex flex-col items-end">
-                         <span className="text-xs font-black text-black">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                         <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Horário</span>
-                       </div>
-                       <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 ${
-                         appt.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-yellow-50 text-yellow-600 border-yellow-100'
-                       }`}>
-                         {appt.status}
-                       </div>
-                    </div>
-                  </div>
-                )) : (
-                  <div className="p-24 text-center">
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-200">
-                      <Icons.Calendar />
-                    </div>
-                    <p className="text-gray-300 font-black uppercase tracking-[0.2em] text-xs">Sua agenda está vazia por enquanto.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
         </div>
-      </main>
-    </div>
+
+        <div className="xl:col-span-8">
+          <div className="bg-white rounded-2xl md:rounded-[4rem] shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 md:p-10 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+              <h2 className="text-base md:text-xl font-black text-black tracking-tight uppercase">Próximas Visitas</h2>
+              <button onClick={() => navigate('agenda')} className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#FF1493]">Ver Tudo</button>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {appointments.length > 0 ? appointments.slice(0, 4).map((appt) => (
+                <div key={appt.id} className="p-5 md:p-10 flex items-center justify-between">
+                  <div className="flex items-center space-x-3 md:space-x-6">
+                    <div className="w-10 h-10 md:w-16 md:h-16 bg-pink-50 rounded-xl md:rounded-[2rem] flex items-center justify-center text-[#FF1493] text-sm md:text-xl font-black">
+                      {appt.clientName.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="font-black text-black text-sm md:text-lg tracking-tight uppercase truncate max-w-[100px] md:max-w-none">{appt.clientName}</h4>
+                      <p className="text-[8px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{appt.clientPhone}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 md:gap-8">
+                     <div className="text-right">
+                       <span className="text-[10px] md:text-xs font-black text-black block">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                     </div>
+                     <div className={`px-3 py-1 md:px-6 md:py-2 rounded-full text-[7px] md:text-[10px] font-black uppercase tracking-widest border ${
+                       appt.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                     }`}>
+                       {appt.status === 'confirmed' ? 'Ok' : 'Pendente'}
+                     </div>
+                  </div>
+                </div>
+              )) : (
+                <div className="p-10 md:p-24 text-center">
+                  <p className="text-gray-300 font-black uppercase text-[10px]">Agenda vazia.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 };
 
