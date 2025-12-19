@@ -13,48 +13,59 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onUpdateStatus, onLogout, navigate }) => {
-  const [copied, setCopied] = useState(false);
-  // Use current origin instead of hardcoded domain
-  const bookingUrl = `${window.location.origin}/?b=${user?.slug || 'demo'}`;
+  const [copyStatus, setCopyStatus] = useState(false);
+  const todayAppts = appointments.filter(a => new Date(a.date).toDateString() === new Date().toDateString());
+  
+  // Sincroniza com o domínio do Vercel informado pelo usuário
+  const baseDomain = "https://pradoagenda.vercel.app";
+  const publicLink = `${baseDomain}/?b=${user?.slug || 'agendar'}`;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(bookingUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(publicLink);
+    setCopyStatus(true);
+    setTimeout(() => setCopyStatus(false), 2000);
   };
-
-  const todayAppts = appointments.filter(a => new Date(a.date).toDateString() === new Date().toDateString());
 
   return (
     <main className="p-4 md:p-10 max-w-7xl mx-auto w-full pb-20 md:pb-10">
-      <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 md:mb-12 gap-4">
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 md:mb-12 gap-6">
         <div className="animate-fade-in text-center md:text-left">
           <h1 className="text-2xl md:text-4xl font-black text-black tracking-tighter uppercase mb-1">Olá, {user?.name.split(' ')[0]}!</h1>
           <p className="text-xs md:text-sm text-gray-500 font-medium tracking-tight">O mercado da beleza não para. Sua agenda também não.</p>
         </div>
         
-        <div className="flex items-center bg-white border border-gray-100 rounded-2xl md:rounded-[2.5rem] p-2 md:p-3 pl-4 md:pl-8 shadow-sm group animate-fade-in">
-          <div className="flex flex-col mr-4 md:mr-8 overflow-hidden">
-            <span className="text-[8px] md:text-[10px] text-gray-300 uppercase font-black tracking-widest mb-0.5">Seu Link Público</span>
-            <span className="text-[10px] md:text-sm font-bold text-black truncate max-w-[120px] md:max-w-[200px]">{bookingUrl}</span>
-          </div>
-          <button 
-            onClick={handleCopy} 
-            className={`p-3 md:p-5 rounded-xl md:rounded-3xl transition-all flex items-center justify-center space-x-2 active:scale-95 ${
-              copied ? 'bg-green-500 text-white' : 'bg-[#FF1493] text-white'
-            }`}
-          >
-            <Icons.Copy className="w-4 h-4" />
-            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest pr-1">{copied ? 'OK' : 'Link'}</span>
-          </button>
+        {/* Link de Agendamento SaaS */}
+        <div className="bg-white px-6 py-4 rounded-[2rem] border border-pink-100 shadow-sm flex items-center gap-4 max-w-md w-full md:w-auto self-center md:self-auto group hover:border-[#FF1493] transition-colors">
+           <div className="hidden sm:flex w-10 h-10 bg-pink-50 rounded-xl items-center justify-center text-[#FF1493] group-hover:bg-[#FF1493] group-hover:text-white transition-all">
+             <Icons.Smartphone />
+           </div>
+           <div className="flex-grow min-w-0">
+             <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Link de Agendamento</p>
+             <p className="text-xs font-bold text-black truncate">{publicLink.replace('https://', '')}</p>
+           </div>
+           <div className="flex gap-2">
+             <button 
+              onClick={handleCopy}
+              title="Copiar Link"
+              className={`p-2.5 rounded-xl transition-all ${copyStatus ? 'bg-green-500 text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+             >
+               {copyStatus ? <Icons.Check className="w-4 h-4" /> : <Icons.Copy className="w-4 h-4" />}
+             </button>
+             <button 
+              onClick={() => window.open(publicLink, '_blank')}
+              title="Visualizar Agenda"
+              className="p-2.5 rounded-xl bg-black text-white hover:bg-gray-800 transition-all shadow-lg"
+             >
+               <Icons.Eye className="w-4 h-4" />
+             </button>
+           </div>
         </div>
       </header>
 
-      {/* Quick Actions Grid - Smaller on Mobile */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
+      {/* Ações Rápidas */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6 mb-8 md:mb-12">
          {[
            { label: 'Novo Agend.', icon: Icons.Plus, color: 'bg-black', view: 'agenda' },
-           { label: 'Marketing AI', icon: Icons.Brain, color: 'bg-[#FF1493]', view: 'marketing' },
            { label: 'Minha Equipe', icon: Icons.Users, color: 'bg-gray-800', view: 'professionals' },
            { label: 'Ajustes', icon: Icons.Settings, color: 'bg-gray-400', view: 'settings' }
          ].map((act, i) => (

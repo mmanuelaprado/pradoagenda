@@ -12,7 +12,6 @@ import BookingPage from './views/BookingPage.tsx';
 import ClientsPage from './views/ClientsPage.tsx';
 import ReportsPage from './views/ReportsPage.tsx';
 import SettingsPage from './views/SettingsPage.tsx';
-import MarketingPage from './views/MarketingPage.tsx';
 import AgendaPage from './views/AgendaPage.tsx';
 import ProfessionalsPage from './views/ProfessionalsPage.tsx';
 import InactivationPage from './views/InactivationPage.tsx';
@@ -22,7 +21,8 @@ import AppsPage from './views/AppsPage.tsx';
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('landing');
   const [user, setUser] = useState<Professional | null>(null);
-  
+  const [bookingProfessional, setBookingProfessional] = useState<Professional | null>(null);
+
   const [businessConfig, setBusinessConfig] = useState<BusinessConfig>({
     interval: 60,
     expediente: [
@@ -47,21 +47,31 @@ const App: React.FC = () => {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
 
   useEffect(() => {
-    // Check for booking slug in URL
+    // Roteamento baseado em Slug (SaaS)
     const urlParams = new URLSearchParams(window.location.search);
     const bookingSlug = urlParams.get('b');
     
     if (bookingSlug) {
+      const savedUser = localStorage.getItem('prado_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        // Sincroniza os dados se o slug bater, ou carrega um perfil demo
+        if (u.slug === bookingSlug) {
+          setBookingProfessional(u);
+        } else {
+          setBookingProfessional({ name: 'Especialista', businessName: 'Espaço Beleza', email: '', slug: bookingSlug });
+        }
+      } else {
+        setBookingProfessional({ name: 'Especialista', businessName: 'Espaço Beleza', email: '', slug: bookingSlug });
+      }
       setCurrentView('booking');
+      return;
     }
 
     const savedUser = localStorage.getItem('prado_user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
-      // Only redirect if not in booking mode
-      if (!bookingSlug && (currentView === 'landing' || currentView === 'login' || currentView === 'signup')) {
-        setCurrentView('dashboard');
-      }
+      setCurrentView('dashboard');
     }
   }, []);
 
@@ -81,7 +91,6 @@ const App: React.FC = () => {
     const newAppt = { ...appt, id: Math.random().toString() };
     setAppointments([...appointments, newAppt]);
     
-    // Auto-update clients list if new
     setClients(prev => {
       const existing = prev.find(c => c.phone === appt.clientPhone);
       if (existing) {
@@ -112,7 +121,6 @@ const App: React.FC = () => {
       case 'company': return <ProfilePage {...commonProps} onUpdate={(u) => {setUser(u); localStorage.setItem('prado_user', JSON.stringify(u))}} />;
       case 'settings': return <SettingsPage {...commonProps} config={businessConfig} onUpdateConfig={setBusinessConfig} />;
       case 'apps': return <AppsPage {...commonProps} />;
-      case 'marketing': return <MarketingPage {...commonProps} services={services} />;
       default: return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={() => {}} />;
     }
   };
@@ -120,7 +128,21 @@ const App: React.FC = () => {
   if (currentView === 'landing') return <LandingPage onStart={() => setCurrentView('signup')} onLogin={() => setCurrentView('login')} />;
   if (currentView === 'login') return <AuthView type="login" onAuth={handleLogin} onToggle={() => setCurrentView('signup')} />;
   if (currentView === 'signup') return <AuthView type="signup" onAuth={handleLogin} onToggle={() => setCurrentView('login')} />;
-  if (currentView === 'booking') return <BookingPage professional={user || {name:'', businessName:'Sua Empresa', email:'', slug:'demo'}} config={businessConfig} services={services.filter(s => s.active)} onComplete={(a) => handleAddManualAppointment(a)} onHome={() => user ? setCurrentView('dashboard') : setCurrentView('landing')} />;
+  
+  if (currentView === 'booking') {
+    return (
+      <BookingPage 
+        professional={bookingProfessional || user || {name:'', businessName:'Sua Empresa', email:'', slug:'demo'}} 
+        config={businessConfig} 
+        services={services.filter(s => s.active)} 
+        onComplete={(a) => handleAddManualAppointment(a)} 
+        onHome={() => {
+          window.history.replaceState({}, '', window.location.origin + window.location.pathname);
+          user ? setCurrentView('dashboard') : setCurrentView('landing');
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">

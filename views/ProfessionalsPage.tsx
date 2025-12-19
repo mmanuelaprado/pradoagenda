@@ -75,12 +75,6 @@ const ProfessionalsPage: React.FC<ProfessionalsPageProps> = ({ user, professiona
                   <span>Expediente</span>
                   <span className="text-black">Ativo</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400">
-                  <span>Link Individual</span>
-                  <span className="text-[#FF1493] lowercase truncate max-w-[150px]">
-                    {window.location.host}/?b={prof.slug}
-                  </span>
-                </div>
              </div>
              
              <button className="w-full mt-8 py-4 bg-gray-50 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:bg-black group-hover:text-white transition-all">Configurar Agenda</button>

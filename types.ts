@@ -66,5 +66,4 @@ export type View =
   | 'company'
   | 'settings'
   | 'apps'
-  | 'booking'
-  | 'marketing';
+  | 'booking';

@@ -8,6 +8,8 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
+  const currentHost = "pradoagenda.vercel.app";
+
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans overflow-x-hidden">
       {/* Navbar Minimalista */}
@@ -20,7 +22,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
         </div>
         <div className="flex items-center space-x-4 md:space-x-8">
           <button onClick={onLogin} className="text-black font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:text-[#FF1493] transition-colors">Entrar</button>
-          <button onClick={onStart} className="bg-black text-white px-5 py-2 md:px-8 md:py-3 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl">Grátis</button>
+          <button onClick={onStart} className="bg-black text-white px-5 py-2 md:px-8 md:py-3 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl">Cadastre-se</button>
         </div>
       </nav>
 
@@ -39,7 +41,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
           </h1>
           
           <p className="text-base md:text-2xl text-gray-500 mb-8 md:mb-12 max-w-2xl mx-auto font-medium leading-relaxed px-4">
-            A ferramenta de agendamento online inteligente que converte seguidores em clientes fiéis.
+            Gere seu link personalizado e transforme seguidores em clientes fiéis.
           </p>
 
           <button onClick={onStart} className="bg-[#FF1493] text-white px-10 py-5 md:px-16 md:py-7 rounded-full text-base md:text-lg font-black uppercase tracking-[0.2em] hover:bg-pink-700 transition-all shadow-2xl shadow-pink-200 active:scale-95">
@@ -50,14 +52,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
         {/* MOCKUP CONTAINER */}
         <div className="relative w-full max-w-5xl mx-auto px-2 md:px-4 mt-4 md:mt-10">
           
-          {/* Relógio Flutuante (Ajustado) */}
           <div className="absolute -top-8 left-0 md:-top-16 md:-left-12 z-30 animate-bounce-slow scale-50 md:scale-100">
             <div className="w-24 h-24 bg-[#FF1493] rounded-full border-[8px] border-white shadow-2xl flex items-center justify-center">
                <Icons.Clock className="w-12 h-12 text-white" />
             </div>
           </div>
 
-          {/* Browser Window Mockup (Versão Desktop simplificada) */}
           <div className="relative bg-white/95 backdrop-blur-md rounded-[2.5rem] md:rounded-[5rem] shadow-2xl border border-white p-4 md:p-14 flex flex-col md:flex-row gap-6 md:gap-14 animate-fade-in-up overflow-hidden">
             <div className="flex-grow opacity-40 md:opacity-100">
               <div className="grid grid-cols-7 gap-1 md:gap-6 mb-4 md:mb-8 text-center mt-4">
@@ -87,32 +87,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
             </div>
           </div>
 
-          {/* SMARTPHONE MOCKUP RECONSTRUÍDO (UI DE AGENDA REAL) */}
           <div className="absolute -right-2 md:-right-20 -bottom-16 md:bottom-10 w-44 md:w-80 z-40 transform rotate-[6deg] animate-float">
              <div className="bg-[#1A1A20] p-2.5 md:p-5 rounded-[2.5rem] md:rounded-[5rem] shadow-[0_50px_100px_rgba(0,0,0,0.3)] border-[4px] md:border-[8px] border-[#2A2A30] relative">
-                {/* Speaker e Camera do Celular */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 md:w-24 h-5 md:h-7 bg-[#1A1A20] rounded-b-2xl z-50 flex items-center justify-center space-x-1">
                    <div className="w-1 h-1 bg-white/10 rounded-full"></div>
                    <div className="w-6 md:w-10 h-1 bg-white/10 rounded-full"></div>
                 </div>
 
                 <div className="bg-white rounded-[1.8rem] md:rounded-[4rem] aspect-[9/19.5] overflow-hidden flex flex-col shadow-inner">
-                  {/* Smartphone App Header */}
                   <div className="bg-[#FF1493] p-4 md:p-6 pt-8 md:pt-14 text-white">
                     <div className="flex items-center space-x-2 md:space-x-3 mb-4">
                        <div className="w-6 h-6 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center text-[#FF1493] font-black text-[8px] md:text-xs">PA</div>
                        <div>
-                         <p className="text-[6px] md:text-[9px] font-black uppercase tracking-widest opacity-80">Seu Link</p>
-                         <p className="text-[7px] md:text-[10px] font-bold">prado.com/b/espaco-beauty</p>
+                         <p className="text-[6px] md:text-[9px] font-black uppercase tracking-widest opacity-80">Link de Agendamento</p>
+                         <p className="text-[7px] md:text-[10px] font-bold truncate max-w-[120px]">{currentHost}/?b=meu-espaco</p>
                        </div>
                     </div>
                   </div>
 
-                  {/* Smartphone Content - Mini Agenda */}
                   <div className="p-3 md:p-6 space-y-3 md:space-y-6 flex-grow flex flex-col">
-                    {/* Mini Calendar Grid */}
                     <div className="space-y-2 md:space-y-4">
-                      <p className="text-[6px] md:text-[8px] font-black text-gray-300 uppercase tracking-widest">Novembro 2024</p>
+                      <p className="text-[6px] md:text-[8px] font-black text-gray-300 uppercase tracking-widest">Escolha a Data</p>
                       <div className="grid grid-cols-7 gap-1">
                         {Array.from({ length: 21 }).map((_, i) => (
                           <div key={i} className={`aspect-square rounded md:rounded-lg flex items-center justify-center text-[5px] md:text-[8px] font-black ${i === 15 ? 'bg-[#FF1493] text-white shadow-lg' : 'bg-gray-50 text-gray-300'}`}>
@@ -122,16 +117,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
                       </div>
                     </div>
 
-                    {/* Service Selection Card */}
                     <div className="bg-pink-50 p-2.5 md:p-4 rounded-xl md:rounded-2xl border border-pink-100 animate-pulse">
                        <div className="flex justify-between items-center mb-1 md:mb-2">
                          <span className="text-[5px] md:text-[7px] font-black text-[#FF1493] uppercase">Selecionado</span>
-                         <span className="text-[6px] md:text-[9px] font-black text-[#FF1493]">R$ 85</span>
+                         <span className="text-[6px] md:text-[9px] font-black text-[#FF1493]">Agendar</span>
                        </div>
-                       <p className="text-[7px] md:text-[11px] font-black text-black uppercase">Design + Henna</p>
+                       <p className="text-[7px] md:text-[11px] font-black text-black uppercase">Agendamento Online</p>
                     </div>
 
-                    {/* Time Slots List */}
                     <div className="space-y-1.5 md:space-y-3">
                        <p className="text-[5px] md:text-[7px] font-black text-gray-300 uppercase tracking-widest">Horários Disponíveis</p>
                        <div className="grid grid-cols-2 gap-1.5 md:gap-3">
@@ -139,13 +132,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
                           <div className="py-2 md:py-3 bg-black text-white rounded-lg md:rounded-xl text-center text-[6px] md:text-[9px] font-bold shadow-lg">10:00</div>
                           <div className="py-2 md:py-3 bg-white border border-gray-100 rounded-lg md:rounded-xl text-center text-[6px] md:text-[9px] font-bold text-gray-400">11:00</div>
                           <div className="py-2 md:py-3 bg-white border border-gray-100 rounded-lg md:rounded-xl text-center text-[6px] md:text-[9px] font-bold text-gray-400">14:00</div>
-                       </div>
-                    </div>
-
-                    {/* Action Button */}
-                    <div className="mt-auto">
-                       <div className="w-full bg-[#FF1493] h-6 md:h-10 rounded-lg md:rounded-2xl shadow-lg flex items-center justify-center">
-                          <span className="text-white text-[5px] md:text-[8px] font-black uppercase tracking-widest">Confirmar Agendamento</span>
                        </div>
                     </div>
                   </div>
@@ -157,11 +143,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
         {/* Features Section */}
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mt-40 md:mt-60 w-full mb-16 md:mb-32 px-4">
            {[
-             { title: "Simples", desc: "Agendamento autônomo sem troca de mensagens.", icon: <Icons.Smartphone /> },
-             { title: "Elegante", desc: "Design que eleva sua autoridade profissional.", icon: <Icons.Sparkles /> },
+             { title: "Sincronizado", desc: "Suas clientes agendam, sua agenda atualiza na hora.", icon: <Icons.Smartphone /> },
+             { title: "Sistema Completo", desc: "Cada profissional tem seu próprio link exclusivo.", icon: <Icons.Sparkles /> },
              { title: "Link na Bio", desc: "Sua agenda aberta 24h para novas marcações.", icon: <Icons.Calendar /> }
            ].map((item, i) => (
-             <div key={i} className="bg-white p-8 md:p-12 rounded-[2rem] md:rounded-[4rem] shadow-sm border border-gray-50 text-left hover:shadow-2xl transition-all hover:-translate-y-1">
+             <div key={i} className="bg-white p-8 md:p-12 rounded-[2rem] md:rounded-[4rem] shadow-sm border border-gray-100 text-left hover:shadow-2xl transition-all hover:-translate-y-1">
                <div className="w-10 h-10 md:w-16 md:h-16 bg-pink-50 text-[#FF1493] rounded-xl md:rounded-[2rem] flex items-center justify-center mb-4 md:mb-8">
                  {item.icon}
                </div>

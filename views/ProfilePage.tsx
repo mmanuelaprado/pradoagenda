@@ -31,6 +31,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
     }, 800);
   };
 
+  const baseDomain = "pradoagenda.vercel.app";
+
   return (
     <main className="p-4 md:p-10 max-w-4xl mx-auto w-full pb-24 md:pb-10">
       <button 
@@ -45,10 +47,36 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
 
       <header className="mb-8">
         <h1 className="text-3xl font-black text-black tracking-tight uppercase">Minha Empresa</h1>
-        <p className="text-gray-500 font-medium tracking-tight">Personalize como os clientes visualizam seu espaço e agendam seus serviços.</p>
+        <p className="text-gray-500 font-medium tracking-tight">Personalize seus dados comerciais e o seu link exclusivo.</p>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Link Section */}
+        <div className="bg-pink-50 p-10 rounded-[3rem] border border-pink-100 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-10 scale-150 rotate-12 text-[#FF1493]">
+            <Icons.Smartphone />
+          </div>
+          <h2 className="text-lg font-black text-[#FF1493] mb-6 uppercase tracking-tight flex items-center gap-2">
+            Seu Link de Agendamento
+          </h2>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-[#FF1493]/60 uppercase tracking-widest">Identificador (Slug)</label>
+              <div className="flex items-center bg-white border-2 border-pink-100 rounded-2xl px-5 focus-within:border-[#FF1493] transition-all">
+                 <span className="text-gray-300 font-bold mr-1 text-sm">{baseDomain}/?b=</span>
+                 <input 
+                  type="text" 
+                  className="w-full py-4 outline-none bg-transparent font-black text-black text-sm"
+                  placeholder="seu-espaco"
+                  value={formData.slug}
+                  onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] font-bold text-[#FF1493]/80 italic">Este é o seu link único no ecossistema SaaS Prado Agenda. Sincronizado com seu perfil.</p>
+          </div>
+        </div>
+
         <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100">
           <h2 className="text-lg font-black text-black mb-8 flex items-center gap-3 uppercase tracking-tight">
             <span className="w-1.5 h-6 bg-[#FF1493] rounded-full"></span>
@@ -56,7 +84,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nome do Profissional Responsável</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Responsável</label>
               <input 
                 type="text" 
                 className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold text-sm"
@@ -65,7 +93,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">E-mail de Contato Comercial</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">E-mail Comercial</label>
               <input 
                 type="email" 
                 className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold text-sm"
@@ -74,7 +102,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
               />
             </div>
             <div className="md:col-span-2 space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nome Público do Estabelecimento</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nome Fantasia do Estabelecimento</label>
               <input 
                 type="text" 
                 className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold text-lg"
@@ -88,41 +116,27 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
         <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100">
           <h2 className="text-lg font-black text-black mb-8 flex items-center gap-3 uppercase tracking-tight">
             <span className="w-1.5 h-6 bg-[#FF1493] rounded-full"></span>
-            Página de Agendamento
+            Social e Bio
           </h2>
           <div className="space-y-8">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sua Biografia Profissional</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Biografia do Perfil</label>
               <textarea 
                 rows={3}
                 className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold text-sm"
-                placeholder="Conte um pouco sobre sua trajetória e especialidades..."
+                placeholder="Uma breve apresentação para suas clientes..."
                 value={formData.bio}
                 onChange={e => setFormData({...formData, bio: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">URL Personalizada (Seu Link)</label>
-              <div className="flex items-center bg-gray-100 border border-gray-100 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-[#FF1493]">
-                <span className="px-5 py-4 text-gray-400 font-black text-[9px] md:text-xs uppercase tracking-widest border-r border-gray-200 truncate max-w-[150px] md:max-w-none">
-                  {window.location.host}/?b=
-                </span>
-                <input 
-                  type="text" 
-                  className="flex-grow px-5 py-4 outline-none bg-transparent font-bold text-sm text-[#FF1493]"
-                  value={formData.slug}
-                  onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Usuário Instagram (@)</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Perfil Instagram (@)</label>
               <div className="flex items-center bg-gray-50 border border-gray-100 rounded-2xl px-5">
                  <span className="text-gray-300 font-bold mr-1">@</span>
                  <input 
                   type="text" 
                   className="w-full py-4 outline-none bg-transparent font-bold text-sm"
-                  placeholder="seu.espaco"
+                  placeholder="ex: salaodaana"
                   value={formData.instagram}
                   onChange={e => setFormData({...formData, instagram: e.target.value})}
                 />
@@ -135,13 +149,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
           <button 
             type="submit" 
             className={`px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 flex items-center space-x-3 ${
-              saveStatus === 'saved' ? 'bg-green-600 text-white shadow-green-100' : 'bg-[#FF1493] text-white hover:bg-pink-700 shadow-pink-200'
+              saveStatus === 'saved' ? 'bg-green-600 text-white' : 'bg-[#FF1493] text-white hover:bg-pink-700 shadow-pink-200'
             }`}
           >
             <span>
-              {saveStatus === 'idle' && 'Salvar Empresa'}
-              {saveStatus === 'saving' && 'Processando...'}
-              {saveStatus === 'saved' && 'Dados Atualizados!'}
+              {saveStatus === 'idle' && 'Atualizar Empresa'}
+              {saveStatus === 'saving' && 'Sincronizando...'}
+              {saveStatus === 'saved' && 'Dados Sincronizados!'}
             </span>
             {saveStatus === 'saved' && <Icons.Check />}
           </button>
