@@ -16,7 +16,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
   const [copyStatus, setCopyStatus] = useState(false);
   const todayAppts = appointments.filter(a => new Date(a.date).toDateString() === new Date().toDateString());
   
-  // Sincroniza com o domínio do Vercel informado pelo usuário
   const baseDomain = "https://pradoagenda.vercel.app";
   const publicLink = `${baseDomain}/?b=${user?.slug || 'agendar'}`;
 
@@ -27,120 +26,104 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
   };
 
   return (
-    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full pb-20 md:pb-10">
+    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full">
       <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 md:mb-12 gap-6">
-        <div className="animate-fade-in text-center md:text-left">
-          <h1 className="text-2xl md:text-4xl font-black text-black tracking-tighter uppercase mb-1">Olá, {user?.name.split(' ')[0]}!</h1>
-          <p className="text-xs md:text-sm text-gray-500 font-medium tracking-tight">O mercado da beleza não para. Sua agenda também não.</p>
+        <div className="animate-fade-in">
+          <h1 className="text-xl md:text-4xl font-black text-black tracking-tighter uppercase mb-1">Olá, {user?.name.split(' ')[0]}!</h1>
+          <p className="text-[10px] md:text-sm text-gray-500 font-medium tracking-tight">O mercado da beleza não para. Sua agenda também não.</p>
         </div>
         
-        {/* Link de Agendamento SaaS */}
-        <div className="bg-white px-6 py-4 rounded-[2rem] border border-pink-100 shadow-sm flex items-center gap-4 max-w-md w-full md:w-auto self-center md:self-auto group hover:border-[#FF1493] transition-colors">
-           <div className="hidden sm:flex w-10 h-10 bg-pink-50 rounded-xl items-center justify-center text-[#FF1493] group-hover:bg-[#FF1493] group-hover:text-white transition-all">
-             <Icons.Smartphone />
-           </div>
+        <div className="bg-white px-5 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 max-w-md w-full md:w-auto group hover:border-[#FF1493] transition-colors">
            <div className="flex-grow min-w-0">
-             <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Link de Agendamento</p>
-             <p className="text-xs font-bold text-black truncate">{publicLink.replace('https://', '')}</p>
+             <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Link de Agendamento</p>
+             <p className="text-[11px] font-bold text-black truncate">{publicLink.replace('https://', '')}</p>
            </div>
            <div className="flex gap-2">
              <button 
               onClick={handleCopy}
-              title="Copiar Link"
-              className={`p-2.5 rounded-xl transition-all ${copyStatus ? 'bg-green-500 text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+              className={`p-2 rounded-xl transition-all ${copyStatus ? 'bg-green-500 text-white' : 'bg-gray-50 text-gray-400'}`}
              >
-               {copyStatus ? <Icons.Check className="w-4 h-4" /> : <Icons.Copy className="w-4 h-4" />}
+               {copyStatus ? <Icons.Check className="w-3.5 h-3.5" /> : <Icons.Copy className="w-3.5 h-3.5" />}
              </button>
              <button 
               onClick={() => window.open(publicLink, '_blank')}
-              title="Visualizar Agenda"
-              className="p-2.5 rounded-xl bg-black text-white hover:bg-gray-800 transition-all shadow-lg"
+              className="p-2 rounded-xl bg-black text-white shadow-lg"
              >
-               <Icons.Eye className="w-4 h-4" />
+               <Icons.Eye className="w-3.5 h-3.5" />
              </button>
            </div>
         </div>
       </header>
 
-      {/* Ações Rápidas */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6 mb-8 md:mb-12">
+      {/* Ações Rápidas Mobile Compactas */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-8 md:mb-12">
          {[
-           { label: 'Novo Agend.', icon: Icons.Plus, color: 'bg-black', view: 'agenda' },
-           { label: 'Minha Equipe', icon: Icons.Users, color: 'bg-gray-800', view: 'professionals' },
-           { label: 'Ajustes', icon: Icons.Settings, color: 'bg-gray-400', view: 'settings' }
+           { label: 'Nova Agenda', icon: Icons.Plus, color: 'bg-black', view: 'agenda' },
+           { label: 'Equipe', icon: Icons.Users, color: 'bg-gray-800', view: 'professionals' },
+           { label: 'Relatórios', icon: Icons.Finance, color: 'bg-pink-600', view: 'finance', hideOnMobile: true },
+           { label: 'Apps', icon: Icons.Smartphone, color: 'bg-gray-400', view: 'apps' }
          ].map((act, i) => (
            <button 
             key={i} 
             onClick={() => navigate(act.view as View)}
-            className={`${act.color} text-white p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] flex flex-col items-start justify-between shadow-lg active:scale-95 transition-all`}
+            className={`${act.color} text-white p-5 rounded-3xl flex flex-col items-start justify-between shadow-lg active:scale-95 transition-all ${act.hideOnMobile ? 'hidden sm:flex' : 'flex'}`}
            >
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                <act.icon className="w-4 h-4 md:w-5 md:h-5" />
+              <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center">
+                <act.icon className="w-4 h-4" />
               </div>
-              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-left mt-4 leading-tight">{act.label}</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-left mt-4">{act.label}</span>
            </button>
          ))}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-10">
-        <div className="xl:col-span-4 space-y-6 md:space-y-10">
-          <div className="bg-white p-6 md:p-10 rounded-2xl md:rounded-[3.5rem] shadow-sm border border-gray-100">
-             <h3 className="text-[10px] md:text-sm font-black text-black uppercase tracking-widest mb-6 md:mb-8 flex items-center gap-2">
-               <Icons.Finance className="w-4 h-4 md:w-5 md:h-5" /> Performance
+        <div className="xl:col-span-4 space-y-6">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-50">
+             <h3 className="text-[10px] font-black text-black uppercase tracking-widest mb-6 flex items-center gap-2">
+               <Icons.Finance className="w-4 h-4" /> Resumo Hoje
              </h3>
-             <div className="space-y-6 md:space-y-8">
+             <div className="grid grid-cols-2 gap-4">
                <div>
-                 <p className="text-gray-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1">Receita Prevista</p>
-                 <p className="text-2xl md:text-4xl font-black text-black tracking-tighter">
+                 <p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Receita</p>
+                 <p className="text-xl font-black text-black">
                    R$ {todayAppts.reduce((acc, curr) => acc + (services.find(s => s.id === curr.serviceId)?.price || 0), 0)}
                  </p>
                </div>
-               <div className="grid grid-cols-2 gap-2 pt-6 border-t border-gray-50">
-                 <div>
-                   <p className="text-gray-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1">Visitas</p>
-                   <p className="text-xl md:text-2xl font-black text-black">{todayAppts.length}</p>
-                 </div>
-                 <div>
-                   <p className="text-gray-400 text-[8px] md:text-[10px] font-black uppercase tracking-widest mb-1">Pendentes</p>
-                   <p className="text-xl md:text-2xl font-black text-[#FF1493]">{appointments.filter(a => a.status === 'pending').length}</p>
-                 </div>
+               <div>
+                 <p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Atendimentos</p>
+                 <p className="text-xl font-black text-black">{todayAppts.length}</p>
                </div>
              </div>
           </div>
         </div>
 
         <div className="xl:col-span-8">
-          <div className="bg-white rounded-2xl md:rounded-[4rem] shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6 md:p-10 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-              <h2 className="text-base md:text-xl font-black text-black tracking-tight uppercase">Próximas Visitas</h2>
-              <button onClick={() => navigate('agenda')} className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#FF1493]">Ver Tudo</button>
+          <div className="bg-white rounded-[2rem] md:rounded-[4rem] shadow-sm border border-gray-50 overflow-hidden">
+            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+              <h2 className="text-sm md:text-xl font-black text-black tracking-tight uppercase">Próximos Horários</h2>
+              <button onClick={() => navigate('agenda')} className="text-[8px] font-black uppercase tracking-widest text-[#FF1493]">Ver Todos</button>
             </div>
             <div className="divide-y divide-gray-50">
-              {appointments.length > 0 ? appointments.slice(0, 4).map((appt) => (
-                <div key={appt.id} className="p-5 md:p-10 flex items-center justify-between">
-                  <div className="flex items-center space-x-3 md:space-x-6">
-                    <div className="w-10 h-10 md:w-16 md:h-16 bg-pink-50 rounded-xl md:rounded-[2rem] flex items-center justify-center text-[#FF1493] text-sm md:text-xl font-black">
+              {appointments.length > 0 ? appointments.slice(0, 5).map((appt) => (
+                <div key={appt.id} className="p-5 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center text-[#FF1493] text-sm font-black uppercase">
                       {appt.clientName.charAt(0)}
                     </div>
                     <div>
-                      <h4 className="font-black text-black text-sm md:text-lg tracking-tight uppercase truncate max-w-[100px] md:max-w-none">{appt.clientName}</h4>
-                      <p className="text-[8px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{appt.clientPhone}</p>
+                      <h4 className="font-black text-black text-[11px] uppercase truncate max-w-[120px]">{appt.clientName}</h4>
+                      <p className="text-[8px] font-black text-gray-400 uppercase">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 md:gap-8">
-                     <div className="text-right">
-                       <span className="text-[10px] md:text-xs font-black text-black block">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                     </div>
-                     <div className={`px-3 py-1 md:px-6 md:py-2 rounded-full text-[7px] md:text-[10px] font-black uppercase tracking-widest border ${
-                       appt.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-yellow-50 text-yellow-600 border-yellow-100'
-                     }`}>
-                       {appt.status === 'confirmed' ? 'Ok' : 'Pendente'}
-                     </div>
+                  <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                    appt.status === 'confirmed' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'
+                  }`}>
+                    {appt.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
                   </div>
                 </div>
               )) : (
-                <div className="p-10 md:p-24 text-center">
-                  <p className="text-gray-300 font-black uppercase text-[10px]">Agenda vazia.</p>
+                <div className="p-10 text-center">
+                  <p className="text-gray-300 font-black uppercase text-[8px]">Nenhum horário hoje.</p>
                 </div>
               )}
             </div>

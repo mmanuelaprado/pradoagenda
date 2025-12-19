@@ -3,17 +3,49 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Prado Agenda - Gestão Profissional de Agendamentos</title>
     
-    <!-- Favicon / Ícone do Navegador -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23FF1493%22/><text x=%2250%%22 y=%2250%%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-family=%22Poppins, sans-serif%22 font-size=%2260%22 font-weight=%22900%22 fill=%22white%22>P</text></svg>">
+    <!-- PWA & Native Meta Tags -->
+    <meta name="theme-color" content="#FF1493">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Prado Agenda">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="icon" type="image/png" href="favicon.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --safe-area-inset-top: env(safe-area-inset-top, 0px);
+        --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+      }
       body {
         font-family: 'Poppins', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior-y: contain;
+        background-color: #f9fafb;
+        /* Garante que o app ocupe a tela inteira incluindo áreas de notch */
+        padding-top: var(--safe-area-inset-top);
+      }
+      .pb-safe {
+        padding-bottom: var(--safe-area-inset-bottom);
+      }
+      .pt-safe {
+        padding-top: var(--safe-area-inset-top);
+      }
+      @media (max-width: 768px) {
+        ::-webkit-scrollbar {
+          display: none;
+        }
+        body {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       }
       .brand-gradient {
         background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%);
@@ -28,9 +60,14 @@
         background: #FF1493;
         border-radius: 10px;
       }
+      /* Estilo para evitar que a navegação nativa cubra o conteúdo */
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
     </style>
     <script>
-      // Shim para process.env exigido pelo SDK em alguns ambientes de deploy
       window.process = { env: { API_KEY: "" } };
     </script>
   <script type="importmap">

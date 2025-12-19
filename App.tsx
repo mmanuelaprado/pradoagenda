@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Professional, Service, Appointment, Client, BusinessConfig } from './types.ts';
 import Sidebar from './Sidebar.tsx';
 import MobileHeader from './components/MobileHeader.tsx';
+import BottomNav from './components/BottomNav.tsx';
 import LandingPage from './views/LandingPage.tsx';
 import AuthView from './views/AuthView.tsx';
 import Dashboard from './views/Dashboard.tsx';
@@ -20,6 +21,7 @@ import AppsPage from './views/AppsPage.tsx';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('landing');
+  const [history, setHistory] = useState<View[]>(['landing']);
   const [user, setUser] = useState<Professional | null>(null);
   const [bookingProfessional, setBookingProfessional] = useState<Professional | null>(null);
 
@@ -46,8 +48,31 @@ const App: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
 
+  // Navegação customizada que mantém histórico (essencial para App Nativo)
+  const navigate = useCallback((v: View) => {
+    setCurrentView(v);
+    setHistory(prev => [...prev, v]);
+    
+    // Feedback tátil simples (Pode ser expandido com Capacitor Haptics)
+    if ('vibrate' in navigator) navigator.vibrate(5);
+  }, []);
+
+  // Lógica para botão voltar (Android Back Button)
   useEffect(() => {
-    // Roteamento baseado em Slug (SaaS)
+    const handlePopState = (e: PopStateEvent) => {
+      if (history.length > 1) {
+        const newHistory = [...history];
+        newHistory.pop();
+        const prevView = newHistory[newHistory.length - 1];
+        setHistory(newHistory);
+        setCurrentView(prevView);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [history]);
+
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const bookingSlug = urlParams.get('b');
     
@@ -55,7 +80,6 @@ const App: React.FC = () => {
       const savedUser = localStorage.getItem('prado_user');
       if (savedUser) {
         const u = JSON.parse(savedUser);
-        // Sincroniza os dados se o slug bater, ou carrega um perfil demo
         if (u.slug === bookingSlug) {
           setBookingProfessional(u);
         } else {
@@ -64,32 +88,32 @@ const App: React.FC = () => {
       } else {
         setBookingProfessional({ name: 'Especialista', businessName: 'Espaço Beleza', email: '', slug: bookingSlug });
       }
-      setCurrentView('booking');
+      navigate('booking');
       return;
     }
 
     const savedUser = localStorage.getItem('prado_user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
-      setCurrentView('dashboard');
+      navigate('dashboard');
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogin = (u: Professional) => {
     setUser(u);
     localStorage.setItem('prado_user', JSON.stringify(u));
-    setCurrentView('dashboard');
+    navigate('dashboard');
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('prado_user');
-    setCurrentView('landing');
+    navigate('landing');
   };
 
   const handleAddManualAppointment = (appt: Omit<Appointment, 'id'>) => {
     const newAppt = { ...appt, id: Math.random().toString() };
-    setAppointments([...appointments, newAppt]);
+    setAppointments(prev => [...prev, newAppt]);
     
     setClients(prev => {
       const existing = prev.find(c => c.phone === appt.clientPhone);
@@ -107,7 +131,7 @@ const App: React.FC = () => {
   };
 
   const renderCurrentView = () => {
-    const commonProps = { user, onLogout: handleLogout, navigate: (v: View) => setCurrentView(v) };
+    const commonProps = { user, onLogout: handleLogout, navigate };
     
     switch (currentView) {
       case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={(id, s) => setAppointments(appointments.map(a => a.id === id ? {...a, status: s} : a))} />;
@@ -125,9 +149,9 @@ const App: React.FC = () => {
     }
   };
 
-  if (currentView === 'landing') return <LandingPage onStart={() => setCurrentView('signup')} onLogin={() => setCurrentView('login')} />;
-  if (currentView === 'login') return <AuthView type="login" onAuth={handleLogin} onToggle={() => setCurrentView('signup')} />;
-  if (currentView === 'signup') return <AuthView type="signup" onAuth={handleLogin} onToggle={() => setCurrentView('login')} />;
+  if (currentView === 'landing') return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
+  if (currentView === 'login') return <AuthView type="login" onAuth={handleLogin} onToggle={() => navigate('signup')} />;
+  if (currentView === 'signup') return <AuthView type="signup" onAuth={handleLogin} onToggle={() => navigate('login')} />;
   
   if (currentView === 'booking') {
     return (
@@ -138,20 +162,21 @@ const App: React.FC = () => {
         onComplete={(a) => handleAddManualAppointment(a)} 
         onHome={() => {
           window.history.replaceState({}, '', window.location.origin + window.location.pathname);
-          user ? setCurrentView('dashboard') : setCurrentView('landing');
+          user ? navigate('dashboard') : navigate('landing');
         }} 
       />
     );
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <Sidebar activeView={currentView} navigate={(v: View) => setCurrentView(v)} onLogout={handleLogout} />
-      <div className="flex-grow flex flex-col">
-        <MobileHeader user={user} navigate={(v: View) => setCurrentView(v)} onLogout={handleLogout} />
-        <div className="flex-grow">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 overflow-hidden">
+      <Sidebar activeView={currentView} navigate={navigate} onLogout={handleLogout} />
+      <div className="flex-grow flex flex-col relative h-full">
+        <MobileHeader user={user} navigate={navigate} onLogout={handleLogout} />
+        <div className="flex-grow pb-20 md:pb-0 overflow-y-auto scroll-smooth custom-scrollbar">
           {renderCurrentView()}
         </div>
+        <BottomNav activeView={currentView} navigate={navigate} />
       </div>
     </div>
   );

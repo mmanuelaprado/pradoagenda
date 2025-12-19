@@ -67,3 +67,8 @@ export type View =
   | 'settings'
   | 'apps'
   | 'booking';
+
+// Utilitário para detecção de plataforma nativa
+export const isNative = () => {
+  return (window as any).Capacitor !== undefined || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+};
