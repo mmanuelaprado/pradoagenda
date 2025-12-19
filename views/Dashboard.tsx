@@ -14,7 +14,8 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onUpdateStatus, onLogout, navigate }) => {
   const [copied, setCopied] = useState(false);
-  const bookingUrl = `pradoagenda.com/b/${user?.slug || 'demo'}`;
+  // Use current origin instead of hardcoded domain
+  const bookingUrl = `${window.location.origin}/?b=${user?.slug || 'demo'}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(bookingUrl);

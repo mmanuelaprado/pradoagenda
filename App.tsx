@@ -47,10 +47,19 @@ const App: React.FC = () => {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
 
   useEffect(() => {
+    // Check for booking slug in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookingSlug = urlParams.get('b');
+    
+    if (bookingSlug) {
+      setCurrentView('booking');
+    }
+
     const savedUser = localStorage.getItem('prado_user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
-      if (currentView === 'landing' || currentView === 'login' || currentView === 'signup') {
+      // Only redirect if not in booking mode
+      if (!bookingSlug && (currentView === 'landing' || currentView === 'login' || currentView === 'signup')) {
         setCurrentView('dashboard');
       }
     }

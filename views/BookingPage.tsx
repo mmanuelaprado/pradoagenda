@@ -87,7 +87,7 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
           </div>
           <button onClick={onHome} className="bg-black text-white px-10 py-4 md:px-12 md:py-5 rounded-full font-black uppercase text-[10px] md:text-xs tracking-[0.2em] shadow-2xl hover:bg-gray-800 transition-all">Concluir</button>
         </div>
-        <footer className="p-4 md:p-8 text-center bg-[#FF1493]">
+        <footer className="p-2 md:p-3 text-center bg-[#FF1493]">
            <div className="flex items-center justify-center space-x-2">
              <div className="w-4 h-4 bg-white rounded flex items-center justify-center text-[#FF1493] font-bold text-[7px]">P</div>
              <span className="text-[9px] font-black uppercase tracking-widest text-white">Prado Agenda</span>
@@ -256,7 +256,7 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
         )}
       </main>
 
-      <footer className="p-4 text-center bg-[#FF1493]">
+      <footer className="p-2 md:p-3 text-center bg-[#FF1493]">
         <div className="flex items-center justify-center space-x-2">
           <div className="w-4 h-4 bg-white rounded flex items-center justify-center text-[#FF1493] font-bold text-[7px]">P</div>
           <span className="text-[9px] font-black uppercase tracking-widest text-white">Prado Agenda</span>

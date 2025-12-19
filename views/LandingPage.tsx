@@ -172,22 +172,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
         </div>
       </main>
 
-      {/* Footer Rosa Pink */}
-      <footer className="py-12 md:py-24 text-center bg-[#FF1493] relative overflow-hidden">
+      {/* Footer Rosa Pink Reduzido */}
+      <footer className="py-6 md:py-10 text-center bg-[#FF1493] relative overflow-hidden">
         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-6 md:mb-8">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg md:rounded-xl flex items-center justify-center shadow-xl">
-              <span className="text-[#FF1493] font-black text-xs md:text-sm">P</span>
+          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4">
+            <div className="w-6 h-6 md:w-8 md:h-8 bg-white rounded-lg flex items-center justify-center shadow-lg">
+              <span className="text-[#FF1493] font-black text-[10px] md:text-xs">P</span>
             </div>
-            <span className="text-xs md:text-sm font-black tracking-[0.3em] text-white uppercase">Prado Social</span>
+            <span className="text-[10px] md:text-xs font-black tracking-[0.3em] text-white uppercase">Prado Social</span>
           </div>
-          <p className="text-pink-100 text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-4">O sistema que transforma seu talento em faturamento.</p>
-          <div className="flex justify-center space-x-4 md:space-x-6 mb-8 opacity-60">
-             <button className="text-white text-[8px] font-black uppercase tracking-widest hover:opacity-100">Instagram</button>
-             <button className="text-white text-[8px] font-black uppercase tracking-widest hover:opacity-100">Ajuda</button>
+          <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 mb-4">
+             <button className="text-white text-[8px] font-black uppercase tracking-widest hover:opacity-100 opacity-60">Instagram</button>
+             <button className="text-white text-[8px] font-black uppercase tracking-widest hover:opacity-100 opacity-60">Ajuda</button>
+             <span className="hidden md:block text-white/40 text-[8px] font-black uppercase tracking-[0.4em]">&copy; 2024 PRADO AGENDA.</span>
           </div>
-          <p className="text-white/40 text-[8px] font-black uppercase tracking-[0.4em]">&copy; 2024 PRADO AGENDA. TODOS OS DIREITOS RESERVADOS.</p>
+          <p className="md:hidden text-white/40 text-[8px] font-black uppercase tracking-[0.4em] mb-2">&copy; 2024 PRADO AGENDA.</p>
         </div>
       </footer>
 

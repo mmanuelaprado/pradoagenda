@@ -104,7 +104,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">URL Personalizada (Seu Link)</label>
               <div className="flex items-center bg-gray-100 border border-gray-100 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-[#FF1493]">
-                <span className="px-5 py-4 text-gray-400 font-black text-xs uppercase tracking-widest border-r border-gray-200">prado.com/b/</span>
+                <span className="px-5 py-4 text-gray-400 font-black text-[9px] md:text-xs uppercase tracking-widest border-r border-gray-200 truncate max-w-[150px] md:max-w-none">
+                  {window.location.host}/?b=
+                </span>
                 <input 
                   type="text" 
                   className="flex-grow px-5 py-4 outline-none bg-transparent font-bold text-sm text-[#FF1493]"
