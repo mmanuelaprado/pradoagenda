@@ -17,9 +17,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
   const todayAppts = appointments.filter(a => new Date(a.date).toDateString() === new Date().toDateString());
   
   const baseDomain = window.location.origin;
-  const publicLink = `${baseDomain}/?b=${user?.slug || ''}`;
+  const publicLink = user?.slug ? `${baseDomain}/?b=${user.slug}` : '';
 
   const handleCopy = () => {
+    if (!publicLink) {
+      navigate('company');
+      return;
+    }
     navigator.clipboard.writeText(publicLink);
     setCopyStatus(true);
     setTimeout(() => setCopyStatus(false), 2000);
@@ -33,26 +37,41 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
           <p className="text-[10px] md:text-sm text-gray-500 font-medium tracking-tight">O mercado da beleza não para. Sua agenda também não.</p>
         </div>
         
-        <div className="bg-white px-5 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 max-w-md w-full md:w-auto group hover:border-[#FF1493] transition-colors">
-           <div className="flex-grow min-w-0">
-             <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Link de Agendamento</p>
-             <p className="text-[11px] font-bold text-black truncate">{publicLink.replace(/(^\w+:|^)\/\//, '')}</p>
-           </div>
-           <div className="flex gap-2">
-             <button 
-              onClick={handleCopy}
-              className={`p-2 rounded-xl transition-all ${copyStatus ? 'bg-green-500 text-white' : 'bg-gray-50 text-gray-400'}`}
-             >
-               {copyStatus ? <Icons.Check className="w-3.5 h-3.5" /> : <Icons.Copy className="w-3.5 h-3.5" />}
-             </button>
-             <button 
-              onClick={() => window.open(publicLink, '_blank')}
-              className="p-2 rounded-xl bg-black text-white shadow-lg"
-             >
-               <Icons.Eye className="w-3.5 h-3.5" />
-             </button>
-           </div>
-        </div>
+        {user?.slug ? (
+          <div className="bg-white px-5 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 max-w-md w-full md:w-auto group hover:border-[#FF1493] transition-colors">
+             <div className="flex-grow min-w-0">
+               <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Link de Agendamento</p>
+               <p className="text-[11px] font-bold text-black truncate">{publicLink.replace(/(^\w+:|^)\/\//, '')}</p>
+             </div>
+             <div className="flex gap-2">
+               <button 
+                onClick={handleCopy}
+                className={`p-2 rounded-xl transition-all ${copyStatus ? 'bg-green-500 text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+               >
+                 {copyStatus ? <Icons.Check className="w-3.5 h-3.5" /> : <Icons.Copy className="w-3.5 h-3.5" />}
+               </button>
+               <button 
+                onClick={() => window.open(publicLink, '_blank')}
+                className="p-2 rounded-xl bg-black text-white shadow-lg hover:scale-105 transition-transform"
+               >
+                 <Icons.Eye className="w-3.5 h-3.5" />
+               </button>
+             </div>
+          </div>
+        ) : (
+          <button 
+            onClick={() => navigate('company')}
+            className="bg-pink-50 border border-pink-200 px-6 py-4 rounded-3xl flex items-center gap-4 animate-pulse group"
+          >
+            <div className="w-10 h-10 bg-[#FF1493] rounded-2xl flex items-center justify-center text-white">
+              <Icons.Plus className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <p className="text-[8px] font-black text-[#FF1493] uppercase tracking-widest">Atenção</p>
+              <p className="text-[11px] font-bold text-black">Clique para criar seu Link Público</p>
+            </div>
+          </button>
+        )}
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-8 md:mb-12">

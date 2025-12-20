@@ -5,23 +5,24 @@ import { Icons } from '../constants.tsx';
 
 interface InactivationPageProps {
   user: Professional | null;
+  inactivations: any[];
+  onAdd: (inact: { date: string, description: string }) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
   onLogout: () => void;
   navigate: (v: View) => void;
 }
 
-const InactivationPage: React.FC<InactivationPageProps> = ({ user, onLogout, navigate }) => {
-  const [inactivations, setInactivations] = useState([
-    { id: 1, date: '2024-12-25', description: 'Natal', type: 'full' },
-    { id: 2, date: '2025-01-01', description: 'Ano Novo', type: 'full' },
-  ]);
-
+const InactivationPage: React.FC<InactivationPageProps> = ({ user, inactivations, onAdd, onDelete, navigate }) => {
   const [formData, setFormData] = useState({ date: '', description: '' });
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.date) return;
-    setInactivations([...inactivations, { ...formData, id: Date.now(), type: 'full' }]);
+    setIsSaving(true);
+    await onAdd(formData);
     setFormData({ date: '', description: '' });
+    setIsSaving(false);
   };
 
   return (
@@ -38,7 +39,7 @@ const InactivationPage: React.FC<InactivationPageProps> = ({ user, onLogout, nav
 
       <header className="mb-10">
         <h1 className="text-3xl font-black text-black tracking-tight uppercase">Inativação de Horários</h1>
-        <p className="text-gray-500 font-medium tracking-tight">Bloqueie datas ou horários específicos para folgas, feriados ou eventos particulares.</p>
+        <p className="text-gray-500 font-medium tracking-tight">Bloqueie datas ou horários específicos para folgas ou feriados.</p>
       </header>
 
       <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100 mb-10">
@@ -47,8 +48,9 @@ const InactivationPage: React.FC<InactivationPageProps> = ({ user, onLogout, nav
             <div className="flex-grow space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Data</label>
               <input 
+                required
                 type="date" 
-                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-black outline-none bg-gray-50 font-bold"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold"
                 value={formData.date}
                 onChange={e => setFormData({...formData, date: e.target.value})}
               />
@@ -56,15 +58,18 @@ const InactivationPage: React.FC<InactivationPageProps> = ({ user, onLogout, nav
             <div className="flex-grow-[2] space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Motivo / Descrição</label>
               <input 
+                required
                 type="text" 
                 placeholder="Ex: Feriado Municipal, Médico, etc."
-                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-black outline-none bg-gray-50 font-bold"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold"
                 value={formData.description}
                 onChange={e => setFormData({...formData, description: e.target.value})}
               />
             </div>
             <div className="flex items-end">
-              <button type="submit" className="w-full md:w-auto bg-black text-white px-8 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl">Bloquear Agora</button>
+              <button disabled={isSaving} type="submit" className="w-full md:w-auto bg-black text-white px-8 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl disabled:opacity-50">
+                {isSaving ? 'Salvando...' : 'Bloquear Agora'}
+              </button>
             </div>
          </form>
       </div>
@@ -78,12 +83,12 @@ const InactivationPage: React.FC<InactivationPageProps> = ({ user, onLogout, nav
                  <Icons.Ban />
                </div>
                <div>
-                 <h4 className="font-black text-black uppercase tracking-tight">{item.description || 'Bloqueio de Agenda'}</h4>
-                 <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">{new Date(item.date).toLocaleDateString('pt-BR')}</p>
+                 <h4 className="font-black text-black uppercase tracking-tight">{item.description}</h4>
+                 <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">{new Date(item.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</p>
                </div>
              </div>
              <button 
-              onClick={() => setInactivations(inactivations.filter(i => i.id !== item.id))}
+              onClick={() => onDelete(item.id)}
               className="p-3 text-gray-200 hover:text-red-500 transition-colors"
              >
                <Icons.Trash />
