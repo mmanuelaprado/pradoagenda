@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<Professional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Dados Admin
+  // Estados Admin
   const [businessConfig, setBusinessConfig] = useState<BusinessConfig | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -32,7 +32,7 @@ const App: React.FC = () => {
   const [teamMembers, setTeamMembers] = useState<Professional[]>([]);
   const [inactivations, setInactivations] = useState<any[]>([]);
 
-  // Dados Visão Pública (Isolados)
+  // Estados Visão Pública (Link do Cliente)
   const [isPublicView, setIsPublicView] = useState(false);
   const [publicProfessional, setPublicProfessional] = useState<Professional | null>(null);
   const [publicServices, setPublicServices] = useState<Service[]>([]);
@@ -51,7 +51,7 @@ const App: React.FC = () => {
       const slug = params.get('b');
       
       if (slug) {
-        // PRIORIDADE MÁXIMA: Se for link de agendamento, não verifica login
+        // PRIORIDADE MÁXIMA: Se for link de agendamento, bloqueia a visão pública e não tenta carregar Admin
         await handlePublicBooking(slug);
       } else {
         await checkAuthSession();
@@ -113,26 +113,27 @@ const App: React.FC = () => {
   const handlePublicBooking = async (slug: string) => {
     setIsLoading(true);
     try {
-      const { data: prof } = await supabase.from('professionals').select('*').eq('slug', slug).maybeSingle();
+      // Busca dados mínimos do profissional para agendamento
+      const { data: prof } = await supabase.from('professionals').select('id, name, business_name, slug, bio, instagram').eq('slug', slug).maybeSingle();
       
       if (prof) {
         setPublicProfessional({ 
           name: prof.name, 
           businessName: prof.business_name, 
-          email: prof.email, 
+          email: '', // Não expõe e-mail do admin para o público
           slug: prof.slug, 
           bio: prof.bio, 
           instagram: prof.instagram 
         });
 
         const [svcs, cfg, appts, inacts] = await Promise.all([
-          supabase.from('services').select('*').eq('professional_id', prof.id).eq('active', true),
-          supabase.from('business_config').select('*').eq('professional_id', prof.id).maybeSingle(),
+          supabase.from('services').select('id, name, description, duration, price, active').eq('professional_id', prof.id).eq('active', true),
+          supabase.from('business_config').select('interval, expediente').eq('professional_id', prof.id).maybeSingle(),
           supabase.from('appointments').select('date, service_id').eq('professional_id', prof.id).filter('status', 'neq', 'cancelled'),
           supabase.from('blocked_dates').select('date').eq('professional_id', prof.id)
         ]);
 
-        if (svcs.data) setPublicServices(svcs.data);
+        if (svcs.data) setPublicServices(svcs.data.map(s => ({ ...s, price: Number(s.price) })));
         if (cfg.data) setPublicConfig({ interval: cfg.data.interval, expediente: cfg.data.expediente });
         if (appts.data) setPublicAppointments(appts.data.map(a => ({ ...a, serviceId: a.service_id } as Appointment)));
         if (inacts.data) setPublicInactivations(inacts.data);
@@ -207,7 +208,7 @@ const App: React.FC = () => {
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><div className="w-12 h-12 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin"></div></div>;
 
-  const renderView = () => {
+  const renderViewContent = () => {
     if (isPublicView && publicProfessional) {
       return (
         <BookingPage 
@@ -242,24 +243,34 @@ const App: React.FC = () => {
     }
   };
 
-  // Se estiver na visão pública, não renderiza Sidebar nem Nav
+  // --- RENDERIZAÇÃO CRÍTICA PARA ISOLAMENTO ---
+
+  // 1. Se for visão de link de agendamento (CLIENTE), não renderiza shell administrativo
   if (isPublicView) {
-    return <div className="min-h-screen bg-white">{renderView()}</div>;
+    return (
+      <div className="min-h-screen bg-white w-full overflow-x-hidden">
+        {renderViewContent()}
+      </div>
+    );
   }
 
-  // Se não estiver logado e for tela de landing/auth, não renderiza Sidebar nem Nav
+  // 2. Se for Landing ou Auth (PÚBLICO), também não renderiza shell administrativo
   if (!user && ['landing', 'login', 'signup'].includes(currentView)) {
-    return <div className="min-h-screen bg-white">{renderView()}</div>;
+    return (
+      <div className="min-h-screen bg-white w-full overflow-x-hidden">
+        {renderViewContent()}
+      </div>
+    );
   }
 
-  // Visão Admin com Sidebar
+  // 3. Visão do Profissional (ADMIN) com Sidebar e Navegação
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 overflow-hidden relative">
       <Sidebar activeView={currentView} navigate={navigate} onLogout={handleLogout} />
       <div className="flex-grow flex flex-col relative h-full">
         <MobileHeader user={user} navigate={navigate} onLogout={handleLogout} />
         <div className="flex-grow pb-20 md:pb-12 overflow-y-auto scroll-smooth custom-scrollbar relative">
-          {renderView()}
+          {renderViewContent()}
         </div>
         <BottomNav activeView={currentView} navigate={navigate} />
       </div>
