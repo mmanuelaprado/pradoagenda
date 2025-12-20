@@ -10,6 +10,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => {
+  const whatsappLink = "https://wa.me/5571996463245";
+  
   const menuItems: { view: View; icon: React.FC; label: string }[] = [
     { view: 'dashboard', icon: Icons.Home, label: 'Início' },
     { view: 'agenda', icon: Icons.Calendar, label: 'Agenda' },
@@ -30,6 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => 
         <div className="w-8 h-8 bg-[#FF1493] rounded-lg flex items-center justify-center font-bold">P</div>
         <span className="text-xl font-bold tracking-tight">Pradoagenda</span>
       </div>
+      
       <nav className="flex-grow space-y-1">
         {menuItems.map((item) => (
           <button
@@ -46,13 +49,34 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => 
           </button>
         ))}
       </nav>
-      <button 
-        onClick={onLogout} 
-        className="flex items-center space-x-3 p-3 text-gray-400 hover:text-red-400 transition-colors mt-8 border-t border-white/5 pt-6"
-      >
-        <Icons.Logout />
-        <span className="font-bold text-sm uppercase tracking-widest">Sair da Conta</span>
-      </button>
+
+      <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
+        <a 
+          href={whatsappLink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center space-x-3 p-3 text-green-400 hover:bg-green-400/10 rounded-xl transition-all group"
+        >
+          <Icons.WhatsApp className="group-hover:scale-110 transition-transform" />
+          <span className="font-black text-[10px] uppercase tracking-widest">Suporte Técnico</span>
+        </a>
+
+        <button 
+          onClick={onLogout} 
+          className="w-full flex items-center space-x-3 p-3 text-gray-400 hover:text-red-400 transition-colors"
+        >
+          <Icons.Logout />
+          <span className="font-bold text-sm uppercase tracking-widest">Sair</span>
+        </button>
+
+        <div className="px-3 py-4 text-center">
+          <p className="text-[8px] font-black text-gray-600 tracking-wider leading-tight">
+            © 2024 Prado Agenda <br/>
+            Desenvolvido por <br/>
+            <span className="text-gray-400">Manuela Prado</span>
+          </p>
+        </div>
+      </div>
     </aside>
   );
 };

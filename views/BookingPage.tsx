@@ -90,7 +90,7 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
         <footer className="p-2 md:p-3 text-center bg-[#FF1493]">
            <div className="flex items-center justify-center space-x-2">
              <div className="w-4 h-4 bg-white rounded flex items-center justify-center text-[#FF1493] font-bold text-[7px]">P</div>
-             <span className="text-[9px] font-black uppercase tracking-widest text-white">Prado Agenda</span>
+             <span className="text-[9px] font-black tracking-widest text-white">Prado Agenda</span>
            </div>
         </footer>
       </div>
@@ -99,7 +99,7 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] flex flex-col font-sans">
-      <header className="p-4 md:p-6 bg-white border-b border-gray-50 flex items-center justify-between sticky top-0 z-50">
+      <header className="p-4 md:p-6 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center space-x-2 md:space-x-3">
           <div className="w-8 h-8 md:w-10 md:h-10 bg-[#FF1493] rounded-lg md:rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-pink-100">P</div>
           <span className="font-black text-black uppercase tracking-tighter text-sm md:text-base">{professional.businessName}</span>
@@ -259,7 +259,7 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
       <footer className="p-2 md:p-3 text-center bg-[#FF1493]">
         <div className="flex items-center justify-center space-x-2">
           <div className="w-4 h-4 bg-white rounded flex items-center justify-center text-[#FF1493] font-bold text-[7px]">P</div>
-          <span className="text-[9px] font-black uppercase tracking-widest text-white">Prado Agenda</span>
+          <span className="text-[9px] font-black tracking-widest text-white">Prado Agenda</span>
         </div>
       </footer>
     </div>

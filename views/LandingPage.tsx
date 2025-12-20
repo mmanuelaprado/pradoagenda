@@ -9,6 +9,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
   const currentHost = "pradoagenda.vercel.app";
+  const whatsappLink = "https://wa.me/5571996463245";
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans overflow-x-hidden">
@@ -51,7 +52,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
 
         {/* MOCKUP CONTAINER */}
         <div className="relative w-full max-w-5xl mx-auto px-2 md:px-4 mt-4 md:mt-10">
-          
           <div className="absolute -top-8 left-0 md:-top-16 md:-left-12 z-30 animate-bounce-slow scale-50 md:scale-100">
             <div className="w-24 h-24 bg-[#FF1493] rounded-full border-[8px] border-white shadow-2xl flex items-center justify-center">
                <Icons.Clock className="w-12 h-12 text-white" />
@@ -158,22 +158,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
         </div>
       </main>
 
-      {/* Footer Rosa Pink Reduzido */}
-      <footer className="py-6 md:py-10 text-center bg-[#FF1493] relative overflow-hidden">
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4">
-            <div className="w-6 h-6 md:w-8 md:h-8 bg-white rounded-lg flex items-center justify-center shadow-lg">
-              <span className="text-[#FF1493] font-black text-[10px] md:text-xs">P</span>
+      {/* Footer Atualizado */}
+      <footer className="py-12 md:py-16 bg-black relative overflow-hidden text-center">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-[#FF1493]/30 to-transparent"></div>
+        
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
+          <div className="flex flex-col items-center mb-10">
+            <div className="w-12 h-12 bg-[#FF1493] rounded-2xl flex items-center justify-center shadow-2xl shadow-pink-900/40 mb-6">
+              <span className="text-white font-black text-xl">P</span>
             </div>
-            <span className="text-[10px] md:text-xs font-black tracking-[0.3em] text-white uppercase">Prado Social</span>
+            <h2 className="text-white font-black text-xl uppercase tracking-tighter mb-2">Prado Agenda</h2>
+            <p className="text-gray-500 text-xs font-medium uppercase tracking-[0.3em]">Gestão de agendamento Inteligente</p>
           </div>
-          <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-6 mb-4">
-             <button className="text-white text-[8px] font-black uppercase tracking-widest hover:opacity-100 opacity-60">Instagram</button>
-             <button className="text-white text-[8px] font-black uppercase tracking-widest hover:opacity-100 opacity-60">Ajuda</button>
-             <span className="hidden md:block text-white/40 text-[8px] font-black uppercase tracking-[0.4em]">&copy; 2024 PRADO AGENDA.</span>
+
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-12">
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 bg-[#25D366] text-white px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform shadow-xl">
+              <Icons.WhatsApp className="w-4 h-4" />
+              <span>Suporte WhatsApp</span>
+            </a>
+            <button className="text-gray-400 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest">Instagram</button>
+            <button className="text-gray-400 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest">Privacidade</button>
           </div>
-          <p className="md:hidden text-white/40 text-[8px] font-black uppercase tracking-[0.4em] mb-2">&copy; 2024 PRADO AGENDA.</p>
+
+          <div className="border-t border-white/5 pt-10">
+            <p className="text-gray-500 text-[9px] md:text-[10px] font-black leading-loose tracking-widest">
+              &copy; 2024 Prado Agenda. Todos os direitos reservados. <br className="md:hidden" /> 
+              Desenvolvido por <span className="text-[#FF1493]">Manuela Prado</span>.
+            </p>
+          </div>
         </div>
       </footer>
 

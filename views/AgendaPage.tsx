@@ -10,10 +10,11 @@ interface AgendaPageProps {
   onLogout: () => void;
   navigate: (v: View) => void;
   onAddManualAppointment: (a: Omit<Appointment, 'id'>) => void;
+  onUpdateStatus: (id: string, status: Appointment['status']) => void;
 }
 
 const AgendaPage: React.FC<AgendaPageProps> = ({ 
-  user, appointments, services, onLogout, navigate, onAddManualAppointment 
+  user, appointments, services, onLogout, navigate, onAddManualAppointment, onUpdateStatus 
 }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [viewDate, setViewDate] = useState(new Date());
@@ -127,28 +128,47 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
           {dailyAppointments.length > 0 ? dailyAppointments.map((appt) => {
             const service = services.find(s => s.id === appt.serviceId);
             return (
-              <div key={appt.id} className="bg-white p-8 rounded-[3rem] shadow-sm border border-gray-50 flex flex-col md:flex-row items-center justify-between hover:shadow-xl hover:-translate-y-1 transition-all group">
-                <div className="flex items-center space-x-6 w-full md:w-auto">
-                  <div className="bg-gray-50 px-6 py-4 rounded-3xl text-center min-w-[100px] group-hover:bg-[#FF1493] group-hover:text-white transition-all">
-                    <p className="text-2xl font-black leading-none">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                    <p className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-50">Horário</p>
+              <div key={appt.id} className="bg-white p-8 rounded-[3rem] shadow-sm border border-gray-50 flex flex-col items-stretch hover:shadow-xl transition-all group">
+                <div className="flex flex-col md:flex-row items-center justify-between w-full gap-6">
+                  <div className="flex items-center space-x-6 w-full md:w-auto">
+                    <div className="bg-gray-50 px-6 py-4 rounded-3xl text-center min-w-[100px] group-hover:bg-[#FF1493] group-hover:text-white transition-all">
+                      <p className="text-2xl font-black leading-none">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-50">Horário</p>
+                    </div>
+                    <div>
+                      <h4 className="font-black text-black text-xl tracking-tight uppercase">{appt.clientName}</h4>
+                      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">{service?.name || 'Agendamento Manual'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-black text-black text-xl tracking-tight uppercase">{appt.clientName}</h4>
-                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">{service?.name || 'Agendamento Manual'}</p>
+                  
+                  <div className="flex items-center space-x-6 w-full md:w-auto justify-between md:justify-end">
+                    <div className="flex flex-col items-end">
+                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">WhatsApp</p>
+                      <p className="text-sm font-bold text-black">{appt.clientPhone}</p>
+                    </div>
+                    <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 ${
+                      appt.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' : 
+                      appt.status === 'cancelled' ? 'bg-red-50 text-red-600 border-red-100' :
+                      'bg-yellow-50 text-yellow-600 border-yellow-100'
+                    }`}>
+                      {appt.status}
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center space-x-6 mt-6 md:mt-0">
-                  <div className="flex flex-col items-end">
-                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">WhatsApp</p>
-                    <p className="text-sm font-bold text-black">{appt.clientPhone}</p>
-                  </div>
-                  <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 ${
-                    appt.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-yellow-50 text-yellow-600 border-yellow-100'
-                  }`}>
-                    {appt.status}
-                  </div>
+
+                <div className="mt-6 pt-6 border-t border-gray-50 flex justify-end gap-3">
+                  <button 
+                    onClick={() => onUpdateStatus(appt.id, 'confirmed')}
+                    className="flex-1 md:flex-none px-6 py-3 bg-green-50 text-green-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all"
+                  >
+                    Confirmar
+                  </button>
+                  <button 
+                    onClick={() => onUpdateStatus(appt.id, 'cancelled')}
+                    className="flex-1 md:flex-none px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    Cancelar
+                  </button>
                 </div>
               </div>
             );
