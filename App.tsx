@@ -44,16 +44,19 @@ const App: React.FC = () => {
     if ('vibrate' in navigator) navigator.vibrate(5);
   }, []);
 
-  // Lógica para detectar Link Público (?b=slug)
+  // Lógica principal de roteamento (Link Público vs Admin)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const slug = params.get('b');
-    
-    if (slug) {
-      handlePublicBooking(slug);
-    } else {
-      checkAuthSession();
-    }
+    const init = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('b');
+      
+      if (slug) {
+        await handlePublicBooking(slug);
+      } else {
+        await checkAuthSession();
+      }
+    };
+    init();
   }, []);
 
   const handlePublicBooking = async (slug: string) => {
@@ -75,7 +78,6 @@ const App: React.FC = () => {
           instagram: prof.instagram
         });
 
-        // Buscar serviços ativos desse profissional
         const { data: svcs } = await supabase
           .from('services')
           .select('*')
@@ -84,7 +86,6 @@ const App: React.FC = () => {
         
         if (svcs) setPublicServices(svcs);
 
-        // Buscar configuração
         const { data: cfg } = await supabase
           .from('business_config')
           .select('*')
@@ -96,11 +97,11 @@ const App: React.FC = () => {
         setIsPublicView(true);
         setCurrentView('booking');
       } else {
-        console.error("Profissional não encontrado");
-        checkAuthSession();
+        await checkAuthSession();
       }
     } catch (err) {
-      console.error("Erro ao carregar agendamento público", err);
+      console.error("Erro no carregamento público:", err);
+      await checkAuthSession();
     } finally {
       setIsLoading(false);
     }
@@ -114,21 +115,6 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  // Monitorar Autenticação
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session && !isPublicView) {
-        fetchInitialData(session.user.id);
-      } else if (!session && !isPublicView) {
-        setUser(null);
-        setCurrentView('landing');
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [isPublicView]);
 
   const fetchInitialData = async (userId: string) => {
     setIsLoading(true);
@@ -161,7 +147,7 @@ const App: React.FC = () => {
         navigate('dashboard');
       }
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
+      console.error("Erro ao carregar dados admin:", error);
     } finally {
       setIsLoading(false);
     }
@@ -177,16 +163,75 @@ const App: React.FC = () => {
     navigate('landing');
   };
 
-  const handlePublicComplete = async (appt: Omit<Appointment, 'id'>) => {
-    // Buscar o ID do profissional pelo slug
-    const { data: prof } = await supabase
-      .from('professionals')
-      .select('id')
-      .eq('slug', publicProfessional?.slug)
-      .single();
+  const handleUpdateProfile = async (updatedData: Professional) => {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
 
-    if (prof) {
-      const { data, error } = await supabase
+      const { error } = await supabase
+        .from('professionals')
+        .update({
+          name: updatedData.name,
+          business_name: updatedData.businessName,
+          slug: updatedData.slug,
+          bio: updatedData.bio,
+          instagram: updatedData.instagram,
+          email: updatedData.email
+        })
+        .eq('id', authUser.id);
+
+      if (error) throw error;
+
+      setUser(updatedData);
+      return true;
+    } catch (err) {
+      console.error("Erro ao atualizar perfil:", err);
+      alert("Erro ao salvar alterações. Verifique se este link já está em uso.");
+      return false;
+    }
+  };
+
+  const handlePublicComplete = async (appt: Omit<Appointment, 'id'>) => {
+    try {
+      // 1. Obter o ID do profissional
+      const { data: prof } = await supabase
+        .from('professionals')
+        .select('id')
+        .eq('slug', publicProfessional?.slug)
+        .single();
+
+      if (!prof) return;
+
+      // 2. Criar ou Atualizar Cliente no Banco de Dados
+      const { data: existingClient } = await supabase
+        .from('clients')
+        .select('id, total_bookings')
+        .eq('phone', appt.clientPhone)
+        .eq('professional_id', prof.id)
+        .maybeSingle();
+
+      if (existingClient) {
+        await supabase
+          .from('clients')
+          .update({ 
+            total_bookings: (existingClient.total_bookings || 0) + 1,
+            last_visit: new Date().toISOString()
+          })
+          .eq('id', existingClient.id);
+      } else {
+        await supabase
+          .from('clients')
+          .insert([{
+            professional_id: prof.id,
+            name: appt.clientName,
+            phone: appt.clientPhone,
+            total_bookings: 1,
+            last_visit: new Date().toISOString()
+          }]);
+      }
+
+      // 3. Salvar o Agendamento
+      await supabase
         .from('appointments')
         .insert([{
           professional_id: prof.id,
@@ -195,11 +240,10 @@ const App: React.FC = () => {
           client_phone: appt.clientPhone,
           date: appt.date,
           status: 'pending'
-        }])
-        .select()
-        .single();
-      
-      if (error) console.error("Erro ao salvar agendamento:", error);
+        }]);
+
+    } catch (err) {
+      console.error("Erro ao completar agendamento público:", err);
     }
   };
 
@@ -230,7 +274,7 @@ const App: React.FC = () => {
       case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onAddManualAppointment={() => {}} onUpdateStatus={handleUpdateStatus} />;
       case 'clients': return <ClientsPage {...commonProps} clients={clients} appointments={appointments} />;
       case 'services': return <ServicesPage {...commonProps} services={services} onAdd={() => {}} onToggle={() => {}} onDelete={() => {}} />;
-      case 'company': return <ProfilePage {...commonProps} onUpdate={() => {}} />;
+      case 'company': return <ProfilePage {...commonProps} onUpdate={handleUpdateProfile} />;
       case 'settings': return <SettingsPage {...commonProps} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={() => {}} />;
       default: return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} />;
     }
@@ -256,12 +300,6 @@ const App: React.FC = () => {
         <MobileHeader user={user} navigate={navigate} onLogout={handleLogout} />
         <div className="flex-grow pb-20 md:pb-12 overflow-y-auto scroll-smooth custom-scrollbar relative">
           {renderCurrentView()}
-          <div className="md:hidden py-10 px-6 text-center border-t border-gray-100 bg-white">
-            <p className="text-[9px] font-black text-gray-300 tracking-wider leading-loose">
-              &copy; 2024 Prado Agenda. Todos os direitos reservados. <br/>
-              Desenvolvido por <span className="text-[#FF1493]">Manuela Prado</span>.
-            </p>
-          </div>
         </div>
         <BottomNav activeView={currentView} navigate={navigate} />
       </div>

@@ -103,55 +103,56 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
             </div>
             <div className="divide-y divide-gray-50">
               {appointments.length > 0 ? appointments.slice(0, 10).map((appt) => (
-                <div key={appt.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center text-[#FF1493] text-sm font-black uppercase">
+                <div key={appt.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-gray-50/50 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-[#FF1493] text-lg font-black uppercase">
                       {appt.clientName.charAt(0)}
                     </div>
                     <div>
-                      <h4 className="font-black text-black text-[11px] uppercase truncate max-w-[120px]">{appt.clientName}</h4>
+                      <h4 className="font-black text-black text-[13px] uppercase tracking-tight">{appt.clientName}</h4>
                       <div className="flex items-center gap-2">
-                        <p className="text-[8px] font-black text-gray-400 uppercase">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                        <span className="text-[8px] text-gray-300">•</span>
-                        <p className="text-[8px] font-black text-gray-400 uppercase">{services.find(s => s.id === appt.serviceId)?.name || 'Serviço'}</p>
+                        <p className="text-[9px] font-black text-gray-400 uppercase">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <span className="text-[9px] text-gray-300">•</span>
+                        <p className="text-[9px] font-black text-[#FF1493] uppercase">{services.find(s => s.id === appt.serviceId)?.name || 'Serviço'}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between md:justify-end gap-3">
-                    <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                      appt.status === 'confirmed' ? 'bg-green-50 text-green-600' : 
-                      appt.status === 'cancelled' ? 'bg-red-50 text-red-600' : 
-                      'bg-yellow-50 text-yellow-600'
+                  <div className="flex items-center justify-between md:justify-end gap-4">
+                    <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                      appt.status === 'confirmed' ? 'bg-green-100 text-green-700' : 
+                      appt.status === 'cancelled' ? 'bg-red-100 text-red-700' : 
+                      'bg-yellow-100 text-yellow-700'
                     }`}>
                       {appt.status === 'confirmed' ? 'Confirmado' : appt.status === 'cancelled' ? 'Cancelado' : 'Pendente'}
                     </div>
 
                     <div className="flex gap-2">
-                      {appt.status !== 'confirmed' && (
-                        <button 
-                          onClick={() => onUpdateStatus(appt.id, 'confirmed')}
-                          className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all"
-                          title="Confirmar"
-                        >
-                          <Icons.Check className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      {appt.status !== 'cancelled' && (
-                        <button 
-                          onClick={() => onUpdateStatus(appt.id, 'cancelled')}
-                          className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"
-                          title="Cancelar"
-                        >
-                          <Icons.Trash className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                      <button 
+                        onClick={() => onUpdateStatus(appt.id, 'confirmed')}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all ${
+                          appt.status === 'confirmed' ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-green-600 text-white shadow-lg shadow-green-100 hover:bg-green-700'
+                        }`}
+                      >
+                        <Icons.Check className="w-3 h-3" />
+                        <span className="hidden sm:inline">Confirmar</span>
+                      </button>
+                      <button 
+                        onClick={() => onUpdateStatus(appt.id, 'cancelled')}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all ${
+                          appt.status === 'cancelled' ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white'
+                        }`}
+                      >
+                        <Icons.Trash className="w-3 h-3" />
+                        <span className="hidden sm:inline">Cancelar</span>
+                      </button>
                     </div>
                   </div>
                 </div>
               )) : (
-                <div className="p-10 text-center">
-                  <p className="text-gray-300 font-black uppercase text-[8px]">Nenhum horário registrado.</p>
+                <div className="p-20 text-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 opacity-20"><Icons.Calendar /></div>
+                  <p className="text-gray-300 font-black uppercase text-[10px] tracking-widest">Nenhum horário registrado para hoje.</p>
                 </div>
               )}
             </div>

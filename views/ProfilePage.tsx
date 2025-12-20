@@ -1,17 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Professional, View } from '../types.ts';
 import { Icons } from '../constants.tsx';
 
 interface ProfilePageProps {
   user: Professional | null;
-  onUpdate: (u: Professional) => void;
+  onUpdate: (u: Professional) => Promise<boolean>;
   onLogout: () => void;
   navigate: (v: View) => void;
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, navigate }) => {
-  const [formData, setFormData] = useState<Professional>(user || {
+  const [formData, setFormData] = useState<Professional>({
     name: '',
     businessName: '',
     email: '',
@@ -19,19 +19,41 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
     bio: '',
     instagram: ''
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData(user);
+    }
+  }, [user]);
+
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveStatus('saving');
-    onUpdate(formData);
-    setTimeout(() => {
+    
+    const success = await onUpdate(formData);
+    
+    if (success) {
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
-    }, 800);
+    } else {
+      setSaveStatus('idle');
+    }
   };
 
-  const baseDomain = "pradoagenda.vercel.app";
+  const baseDomain = window.location.origin;
+
+  const handleSlugChange = (val: string) => {
+    const cleanSlug = val
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+    setFormData({...formData, slug: cleanSlug});
+  };
 
   return (
     <main className="p-4 md:p-10 max-w-4xl mx-auto w-full pb-24 md:pb-10">
@@ -63,13 +85,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[#FF1493]/60 uppercase tracking-widest">Identificador (Slug)</label>
               <div className="flex items-center bg-white border-2 border-pink-100 rounded-2xl px-5 focus-within:border-[#FF1493] transition-all">
-                 <span className="text-gray-300 font-bold mr-1 text-sm">{baseDomain}/?b=</span>
+                 <span className="text-gray-300 font-bold mr-1 text-xs md:text-sm">{baseDomain.replace(/(^\w+:|^)\/\//, '')}/?b=</span>
                  <input 
+                  required
                   type="text" 
                   className="w-full py-4 outline-none bg-transparent font-black text-black text-sm"
                   placeholder="seu-espaco"
                   value={formData.slug}
-                  onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
+                  onChange={e => handleSlugChange(e.target.value)}
                 />
               </div>
             </div>
@@ -86,6 +109,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Responsável</label>
               <input 
+                required
                 type="text" 
                 className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold text-sm"
                 value={formData.name}
@@ -95,6 +119,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">E-mail Comercial</label>
               <input 
+                required
                 type="email" 
                 className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold text-sm"
                 value={formData.email}
@@ -104,6 +129,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
             <div className="md:col-span-2 space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nome Fantasia do Estabelecimento</label>
               <input 
+                required
                 type="text" 
                 className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:ring-2 focus:ring-[#FF1493] outline-none bg-gray-50 font-bold text-lg"
                 value={formData.businessName}
@@ -148,7 +174,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
         <div className="flex justify-end pt-4">
           <button 
             type="submit" 
-            className={`px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 flex items-center space-x-3 ${
+            disabled={saveStatus === 'saving'}
+            className={`px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 flex items-center space-x-3 disabled:opacity-50 ${
               saveStatus === 'saved' ? 'bg-green-600 text-white' : 'bg-[#FF1493] text-white hover:bg-pink-700 shadow-pink-200'
             }`}
           >
