@@ -51,7 +51,7 @@ const App: React.FC = () => {
       const slug = params.get('b');
       
       if (slug) {
-        // Se tem slug, ignora Auth e vai direto para busca do profissional
+        // PRIORIDADE MÁXIMA: Se for link de agendamento, não verifica login
         await handlePublicBooking(slug);
       } else {
         await checkAuthSession();
@@ -113,7 +113,7 @@ const App: React.FC = () => {
   const handlePublicBooking = async (slug: string) => {
     setIsLoading(true);
     try {
-      const { data: prof, error } = await supabase.from('professionals').select('*').eq('slug', slug).maybeSingle();
+      const { data: prof } = await supabase.from('professionals').select('*').eq('slug', slug).maybeSingle();
       
       if (prof) {
         setPublicProfessional({ 
@@ -125,27 +125,27 @@ const App: React.FC = () => {
           instagram: prof.instagram 
         });
 
-        // Carregar dados de disponibilidade para o profissional público
         const [svcs, cfg, appts, inacts] = await Promise.all([
           supabase.from('services').select('*').eq('professional_id', prof.id).eq('active', true),
           supabase.from('business_config').select('*').eq('professional_id', prof.id).maybeSingle(),
-          supabase.from('appointments').select('*').eq('professional_id', prof.id).filter('status', 'neq', 'cancelled'),
-          supabase.from('blocked_dates').select('*').eq('professional_id', prof.id)
+          supabase.from('appointments').select('date, service_id').eq('professional_id', prof.id).filter('status', 'neq', 'cancelled'),
+          supabase.from('blocked_dates').select('date').eq('professional_id', prof.id)
         ]);
 
         if (svcs.data) setPublicServices(svcs.data);
         if (cfg.data) setPublicConfig({ interval: cfg.data.interval, expediente: cfg.data.expediente });
-        if (appts.data) setPublicAppointments(appts.data.map(a => ({ ...a, serviceId: a.service_id, clientName: a.client_name, clientPhone: a.client_phone })));
+        if (appts.data) setPublicAppointments(appts.data.map(a => ({ ...a, serviceId: a.service_id } as Appointment)));
         if (inacts.data) setPublicInactivations(inacts.data);
 
         setIsPublicView(true);
         setCurrentView('booking');
       } else {
-        // Se o slug não for encontrado, tenta carregar sessão normal
+        setIsPublicView(false);
         await checkAuthSession();
       }
     } catch (err) {
       console.error("Erro na busca pública:", err);
+      setIsPublicView(false);
       await checkAuthSession();
     } finally {
       setIsLoading(false);
@@ -157,7 +157,6 @@ const App: React.FC = () => {
       const { data: prof } = await supabase.from('professionals').select('id').eq('slug', publicProfessional?.slug).single();
       if (!prof) return;
 
-      // Upsert cliente
       const { data: clientData } = await supabase.from('clients').select('id, total_bookings').eq('phone', appt.clientPhone).eq('professional_id', prof.id).maybeSingle();
       
       if (clientData) {
@@ -175,7 +174,6 @@ const App: React.FC = () => {
         }]);
       }
 
-      // Salvar Agendamento
       await supabase.from('appointments').insert([{ 
         professional_id: prof.id, 
         service_id: appt.serviceId, 
@@ -190,17 +188,15 @@ const App: React.FC = () => {
     }
   };
 
-  // Handlers Admin omitidos por brevidade (mantendo os mesmos)
-  const handleUpdateProfile = async (u: Professional) => { /* ... */ return true; };
-  const handleAddService = async (s: any) => { /* ... */ };
-  const handleToggleService = async (id: string) => { /* ... */ };
-  const handleDeleteService = async (id: string) => { /* ... */ };
-  const handleUpdateConfig = async (c: any) => { /* ... */ };
-  const handleAddInactivation = async (i: any) => { /* ... */ };
-  const handleDeleteInactivation = async (id: string) => { /* ... */ };
-  const handleAddTeamMember = async (p: any) => { /* ... */ };
-  const handleAddManualAppointment = async (a: any) => { /* ... */ };
-  const handleUpdateStatus = async (id: string, s: any) => { /* ... */ };
+  const handleUpdateProfile = async (u: Professional) => {
+     const { data: { user: authUser } } = await supabase.auth.getUser();
+     if (!authUser) return false;
+     const { error } = await supabase.from('professionals').update({
+       name: u.name, business_name: u.businessName, slug: u.slug, bio: u.bio, instagram: u.instagram
+     }).eq('id', authUser.id);
+     if (!error) { setUser(u); return true; }
+     return false;
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -221,7 +217,7 @@ const App: React.FC = () => {
           appointments={publicAppointments}
           inactivations={publicInactivations}
           onComplete={handlePublicComplete} 
-          onHome={() => window.location.href = '/'} 
+          onHome={() => { window.location.href = window.location.origin; }} 
         />
       );
     }
@@ -232,36 +228,41 @@ const App: React.FC = () => {
       case 'landing': return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
       case 'login': return <AuthView type="login" onAuth={() => {}} onToggle={() => navigate('signup')} />;
       case 'signup': return <AuthView type="signup" onAuth={() => {}} onToggle={() => navigate('login')} />;
-      case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} />;
-      case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onAddManualAppointment={handleAddManualAppointment} onUpdateStatus={handleUpdateStatus} />;
+      case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={() => {}} />;
+      case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onAddManualAppointment={() => {}} onUpdateStatus={() => {}} />;
       case 'clients': return <ClientsPage {...commonProps} clients={clients} appointments={appointments} />;
-      case 'services': return <ServicesPage {...commonProps} services={services} onAdd={handleAddService} onToggle={handleToggleService} onDelete={handleDeleteService} />;
+      case 'services': return <ServicesPage {...commonProps} services={services} onAdd={() => {}} onToggle={() => {}} onDelete={() => {}} />;
       case 'company': return <ProfilePage {...commonProps} onUpdate={handleUpdateProfile} />;
-      case 'settings': return <SettingsPage {...commonProps} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={handleUpdateConfig} />;
-      case 'inactivation': return <InactivationPage {...commonProps} inactivations={inactivations} onAdd={handleAddInactivation} onDelete={handleDeleteInactivation} />;
-      case 'professionals': return <ProfessionalsPage {...commonProps} professionals={teamMembers} onAdd={handleAddTeamMember} />;
+      case 'settings': return <SettingsPage {...commonProps} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={() => {}} />;
+      case 'inactivation': return <InactivationPage {...commonProps} inactivations={inactivations} onAdd={async () => {}} onDelete={async () => {}} />;
+      case 'professionals': return <ProfessionalsPage {...commonProps} professionals={teamMembers} onAdd={() => {}} />;
       case 'apps': return <AppsPage {...commonProps} />;
       case 'recurring': return <RecurringPage {...commonProps} />;
-      default: return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} />;
+      default: return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
     }
   };
 
+  // Se estiver na visão pública, não renderiza Sidebar nem Nav
+  if (isPublicView) {
+    return <div className="min-h-screen bg-white">{renderView()}</div>;
+  }
+
+  // Se não estiver logado e for tela de landing/auth, não renderiza Sidebar nem Nav
+  if (!user && ['landing', 'login', 'signup'].includes(currentView)) {
+    return <div className="min-h-screen bg-white">{renderView()}</div>;
+  }
+
+  // Visão Admin com Sidebar
   return (
-    <div className={`min-h-screen ${isPublicView ? 'bg-white' : 'bg-gray-50'} overflow-x-hidden`}>
-      {!isPublicView && !['landing', 'login', 'signup'].includes(currentView) ? (
-        <div className="flex flex-col md:flex-row min-h-screen relative">
-          <Sidebar activeView={currentView} navigate={navigate} onLogout={handleLogout} />
-          <div className="flex-grow flex flex-col relative h-full">
-            <MobileHeader user={user} navigate={navigate} onLogout={handleLogout} />
-            <div className="flex-grow pb-20 md:pb-12 overflow-y-auto scroll-smooth custom-scrollbar relative">
-              {renderView()}
-            </div>
-            <BottomNav activeView={currentView} navigate={navigate} />
-          </div>
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 overflow-hidden relative">
+      <Sidebar activeView={currentView} navigate={navigate} onLogout={handleLogout} />
+      <div className="flex-grow flex flex-col relative h-full">
+        <MobileHeader user={user} navigate={navigate} onLogout={handleLogout} />
+        <div className="flex-grow pb-20 md:pb-12 overflow-y-auto scroll-smooth custom-scrollbar relative">
+          {renderView()}
         </div>
-      ) : (
-        renderView()
-      )}
+        <BottomNav activeView={currentView} navigate={navigate} />
+      </div>
     </div>
   );
 };
