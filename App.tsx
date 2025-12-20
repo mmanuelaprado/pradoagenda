@@ -48,16 +48,22 @@ const App: React.FC = () => {
     const init = async () => {
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('b');
-      if (slug) await handlePublicBooking(slug);
-      else await checkAuthSession();
+      if (slug) {
+        await handlePublicBooking(slug);
+      } else {
+        await checkAuthSession();
+      }
     };
     init();
   }, []);
 
   const checkAuthSession = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session) await fetchInitialData(session.user.id);
-    else setIsLoading(false);
+    if (session) {
+      await fetchInitialData(session.user.id);
+    } else {
+      setIsLoading(false);
+    }
   };
 
   const fetchInitialData = async (userId: string) => {
@@ -103,7 +109,6 @@ const App: React.FC = () => {
     }
   };
 
-  // HANDLERS DE PERSISTÊNCIA
   const handleUpdateProfile = async (updatedData: Professional) => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) return false;
@@ -172,7 +177,6 @@ const App: React.FC = () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) return;
     
-    // Salvar ou atualizar cliente
     const { data: clientData } = await supabase.from('clients').select('id, total_bookings').eq('phone', appt.clientPhone).eq('professional_id', authUser.id).maybeSingle();
     if (clientData) {
       await supabase.from('clients').update({ total_bookings: (clientData.total_bookings || 0) + 1, last_visit: new Date().toISOString() }).eq('id', clientData.id);
@@ -186,7 +190,7 @@ const App: React.FC = () => {
 
     if (!error && data) {
       setAppointments([...appointments, { ...data, serviceId: data.service_id, clientName: data.client_name, clientPhone: data.client_phone }]);
-      await fetchInitialData(authUser.id); // Recarregar para atualizar lista de clientes
+      await fetchInitialData(authUser.id);
     }
   };
 
@@ -253,6 +257,9 @@ const App: React.FC = () => {
     }
     const commonProps = { user, onLogout: handleLogout, navigate };
     switch (currentView) {
+      case 'landing': return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
+      case 'login': return <AuthView type="login" onAuth={() => {}} onToggle={() => navigate('signup')} />;
+      case 'signup': return <AuthView type="signup" onAuth={() => {}} onToggle={() => navigate('login')} />;
       case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} />;
       case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onAddManualAppointment={handleAddManualAppointment} onUpdateStatus={handleUpdateStatus} />;
       case 'clients': return <ClientsPage {...commonProps} clients={clients} appointments={appointments} />;
@@ -269,6 +276,16 @@ const App: React.FC = () => {
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><div className="w-12 h-12 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin"></div></div>;
 
+  // VISÃO PÚBLICA OU AUTENTICAÇÃO (SEM SIDEBAR/NAV)
+  if (isPublicView || ['landing', 'login', 'signup'].includes(currentView)) {
+    return (
+      <div className="min-h-screen bg-white overflow-x-hidden">
+        {renderCurrentView()}
+      </div>
+    );
+  }
+
+  // VISÃO ADMINISTRATIVA (COM SIDEBAR/NAV)
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 overflow-hidden relative">
       <Sidebar activeView={currentView} navigate={navigate} onLogout={handleLogout} />
