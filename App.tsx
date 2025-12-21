@@ -54,14 +54,14 @@ const App: React.FC = () => {
       // Captura o slug da URL (ex: pradoagenda.com/salao-ana -> salao-ana)
       const pathSlug = window.location.pathname.split('/').filter(Boolean)[0];
       const params = new URLSearchParams(window.location.search);
-      const querySlug = params.get('b'); // Mantém suporte legado por garantia
+      const querySlug = params.get('b');
       
       const slug = pathSlug || querySlug;
 
-      // Lista de rotas protegidas que não devem ser tratadas como slug de empresa
-      const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps'];
+      // Lista de rotas protegidas e arquivos que devem ser ignorados
+      const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps', 'favicon.ico', 'manifest.json', 'sw.js'];
 
-      if (slug && !protectedRoutes.includes(slug)) {
+      if (slug && !protectedRoutes.includes(slug) && !slug.includes('.')) {
         handlePublicBooking(slug);
       } else {
         checkAuthSession();
@@ -225,7 +225,7 @@ const App: React.FC = () => {
         <div className="flex flex-col">
           {publicError && (
             <div className="bg-red-500 text-white p-4 text-center font-black text-[10px] uppercase tracking-widest animate-fade-in">
-              Agenda não encontrada. Verifique se você está no mesmo navegador onde criou sua conta.
+              Agenda não encontrada. Lembre-se: no modo demonstração, o link só funciona no seu navegador.
             </div>
           )}
           <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />
