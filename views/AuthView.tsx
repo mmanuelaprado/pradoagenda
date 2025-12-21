@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { supabase } from '../services/supabaseClient.ts';
+import { db } from '../services/db.ts';
 import { Professional } from '../types';
 
 interface AuthViewProps {
@@ -9,7 +9,7 @@ interface AuthViewProps {
   onToggle: () => void;
 }
 
-const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
+const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
   const [formData, setFormData] = useState({
     name: '',
     businessName: '',
@@ -26,42 +26,22 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
 
     try {
       if (type === 'signup') {
-        // Envia dados para o trigger criar o perfil automaticamente
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        const newUser = db.auth.signup({
           email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.name,
-              business_name: formData.businessName
-            }
-          }
+          name: formData.name,
+          businessName: formData.businessName
         });
-
-        if (signUpError) throw signUpError;
-        
-        // Se o "Confirm email" estiver desativado no Supabase, 
-        // o authData.session existirá imediatamente.
-        if (authData.session) {
-          // O listener no App.tsx detectará a mudança de estado e navegará automaticamente.
-          console.log("Cadastro e login automáticos realizados.");
-        } else {
-          // Caso o usuário ainda não tenha desativado no dashboard
-          setError("A confirmação de e-mail ainda está ativa no seu Supabase. Desative-a em Authentication -> Settings.");
-        }
+        onAuth(newUser as any);
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-        if (signInError) throw signInError;
+        const user = db.auth.login(formData.email);
+        if (user) {
+          onAuth(user as any);
+        } else {
+          setError("E-mail não cadastrado.");
+        }
       }
     } catch (err: any) {
-      if (err.message.includes('unique constraint') || err.message.includes('slug')) {
-        setError('Este nome de empresa já está em uso. Escolha outro.');
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -79,7 +59,7 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
             <span className="text-2xl font-black tracking-tighter uppercase">Pradoagenda</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-black mb-6 leading-none tracking-tight">O sistema que sua beleza merece.</h2>
-          <p className="text-gray-400 text-lg font-medium">Sincronização total. Dados seguros na nuvem.</p>
+          <p className="text-gray-400 text-lg font-medium">Sincronização total. Dados seguros localmente.</p>
         </div>
       </div>
       <div className="md:w-3/5 bg-white flex flex-col justify-center p-8 md:p-24">
@@ -109,7 +89,7 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle }) => {
             </div>
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Senha</label>
-              <input required type="password" placeholder="••••••••" className="w-full px-5 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:ring-2 focus:ring-[#FF1493] outline-none font-bold" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+              <input required type="password" placeholder="Qualquer senha (Simulação)" className="w-full px-5 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:ring-2 focus:ring-[#FF1493] outline-none font-bold" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
             </div>
             <button 
               disabled={loading}

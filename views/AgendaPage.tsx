@@ -11,10 +11,11 @@ interface AgendaPageProps {
   navigate: (v: View) => void;
   onAddManualAppointment: (a: Omit<Appointment, 'id'>) => void;
   onUpdateStatus: (id: string, status: Appointment['status']) => void;
+  inactivations?: any[];
 }
 
 const AgendaPage: React.FC<AgendaPageProps> = ({ 
-  user, appointments, services, onLogout, navigate, onAddManualAppointment, onUpdateStatus 
+  user, appointments, services, onLogout, navigate, onAddManualAppointment, onUpdateStatus, inactivations = [] 
 }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [viewDate, setViewDate] = useState(new Date());
@@ -24,6 +25,8 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
   const dailyAppointments = appointments.filter(a => 
     new Date(a.date).toISOString().split('T')[0] === selectedDate
   ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const isBlockedDay = inactivations.find(inv => inv.date === selectedDate);
 
   const currentYear = viewDate.getFullYear();
   const currentMonth = viewDate.getMonth();
@@ -97,7 +100,8 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
               {calendarDays.map((day, idx) => {
                 const dayDate = day ? `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
                 const isSelected = dayDate === selectedDate;
-                const apptOnDay = dayDate && appointments.some(a => new Date(a.date).toISOString().split('T')[0] === dayDate);
+                const apptOnDay = dayDate && appointments.some(a => a.status !== 'cancelled' && new Date(a.date).toISOString().split('T')[0] === dayDate);
+                const isDayBlocked = dayDate && inactivations.some(inv => inv.date === dayDate);
                 
                 return (
                   <div key={idx} className="aspect-square">
@@ -105,11 +109,13 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
                       <button
                         onClick={() => setSelectedDate(dayDate!)}
                         className={`w-full h-full rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center relative ${
-                          isSelected ? 'bg-[#FF1493] text-white shadow-xl shadow-pink-200 scale-110 z-10' : 'text-black hover:bg-pink-50'
+                          isSelected ? 'bg-[#FF1493] text-white shadow-xl shadow-pink-200 scale-110 z-10' : 
+                          isDayBlocked ? 'bg-gray-100 text-gray-300' : 'text-black hover:bg-pink-50'
                         }`}
                       >
                         {day}
                         {apptOnDay && !isSelected && <span className="absolute bottom-2 w-1.5 h-1.5 bg-[#FF1493] rounded-full"></span>}
+                        {isDayBlocked && !isSelected && <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-gray-300 rounded-full"></span>}
                       </button>
                     ) : null}
                   </div>
@@ -120,6 +126,15 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
         </div>
 
         <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+          {isBlockedDay && (
+            <div className="bg-red-50 border-2 border-red-100 p-6 rounded-[2.5rem] mb-6 animate-pulse">
+               <div className="flex items-center space-x-3 text-red-600">
+                  <Icons.Ban className="w-5 h-5" />
+                  <span className="font-black uppercase tracking-widest text-xs">DIA BLOQUEADO: {isBlockedDay.description}</span>
+               </div>
+            </div>
+          )}
+
           <div className="flex items-center space-x-4 mb-6 px-4">
              <div className="w-2 h-2 rounded-full bg-[#FF1493]"></div>
              <span className="font-black text-black uppercase tracking-widest text-xs">Visitas para {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</span>
@@ -188,6 +203,7 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
                <h2 className="text-2xl font-black text-black uppercase tracking-tight">Novo Registro</h2>
                <button onClick={() => setShowManualModal(false)} className="text-gray-300 hover:text-black font-bold text-xl">✕</button>
              </div>
+             {isBlockedDay && <p className="mb-6 bg-red-50 p-4 rounded-xl text-red-500 text-[10px] font-black uppercase">Atenção: Este dia está marcado como inativo ({isBlockedDay.description})</p>}
              <form onSubmit={handleManualSubmit} className="space-y-6">
                <div>
                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-2">Cliente</label>

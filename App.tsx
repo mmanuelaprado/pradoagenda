@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Professional, Service, Appointment, Client, BusinessConfig } from './types.ts';
-import { supabase } from './services/supabaseClient.ts';
+import { db, generateSlug } from './services/db.ts';
 import Sidebar from './Sidebar.tsx';
 import MobileHeader from './components/MobileHeader.tsx';
 import BottomNav from './components/BottomNav.tsx';
@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('landing');
   const [user, setUser] = useState<Professional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [publicError, setPublicError] = useState(false);
 
   // Estados Admin
   const [businessConfig, setBusinessConfig] = useState<BusinessConfig | null>(null);
@@ -41,143 +42,155 @@ const App: React.FC = () => {
 
   const navigate = useCallback((v: View) => {
     setCurrentView(v);
+    // Se não for uma slug de empresa, limpa a URL visualmente para o admin
+    if (v !== 'booking' && window.location.pathname !== '/') {
+      window.history.pushState({}, '', '/');
+    }
     window.scrollTo(0, 0);
   }, []);
 
   useEffect(() => {
-    const init = async () => {
+    const init = () => {
+      // Captura o slug da URL (ex: pradoagenda.com/salao-ana -> salao-ana)
+      const pathSlug = window.location.pathname.split('/').filter(Boolean)[0];
       const params = new URLSearchParams(window.location.search);
-      const slug = params.get('b');
-      if (slug) {
-        await handlePublicBooking(slug);
+      const querySlug = params.get('b'); // Mantém suporte legado por garantia
+      
+      const slug = pathSlug || querySlug;
+
+      // Lista de rotas protegidas que não devem ser tratadas como slug de empresa
+      const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps'];
+
+      if (slug && !protectedRoutes.includes(slug)) {
+        handlePublicBooking(slug);
       } else {
-        await checkAuthSession();
+        checkAuthSession();
       }
     };
     init();
   }, []);
 
-  const checkAuthSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+  const checkAuthSession = () => {
+    const session = db.auth.getSession();
     if (session) {
-      await fetchInitialData(session.user.id);
+      fetchInitialData(session.user.id);
     } else {
       setIsLoading(false);
     }
   };
 
-  const fetchInitialData = async (userId: string) => {
+  const fetchInitialData = (userId: string) => {
     setIsLoading(true);
     try {
-      const profRes = await supabase.from('professionals').eq('id', userId).maybeSingle();
-      // Fixed: Removed redundant .then(r => r) calls which were causing TS errors
-      const servicesRes = await supabase.from('services').eq('professional_id', userId);
-      const apptsRes = await supabase.from('appointments').eq('professional_id', userId);
-      const clientsRes = await supabase.from('clients').eq('professional_id', userId);
-      const configRes = await supabase.from('business_config').eq('professional_id', userId).maybeSingle();
-      const inactRes = await supabase.from('blocked_dates').eq('professional_id', userId);
+      const professional = db.table('professionals').find({ id: userId });
+      const userServices = db.table('services').where({ professional_id: userId });
+      const userAppts = db.table('appointments').where({ professional_id: userId });
+      const userClients = db.table('clients').where({ professional_id: userId });
+      const userConfig = db.table('business_config').find({ professional_id: userId });
+      const userInacts = db.table('blocked_dates').where({ professional_id: userId });
 
-      if (profRes.data) setUser(profRes.data);
-      if (servicesRes.data) setServices(servicesRes.data);
-      if (apptsRes.data) setAppointments(apptsRes.data);
-      if (clientsRes.data) setClients(clientsRes.data);
-      if (configRes.data) setBusinessConfig(configRes.data);
-      if (inactRes.data) setInactivations(inactRes.data);
+      if (professional) setUser(professional);
+      setServices(userServices);
+      setAppointments(userAppts);
+      setClients(userClients);
+      if (userConfig) setBusinessConfig(userConfig);
+      setInactivations(userInacts);
 
       if (['landing', 'login', 'signup'].includes(currentView)) navigate('dashboard');
     } catch (e) { console.error(e); }
     finally { setIsLoading(false); }
   };
 
-  // --- HANDLERS DE PERSISTÊNCIA ---
+  const handleSaveAppointment = async (appt: Omit<Appointment, 'id'>) => {
+    const profId = user?.id || publicProfessional?.id;
+    if (!profId) return;
 
-  const handleUpdateStatus = async (id: string, status: Appointment['status']) => {
-    await supabase.from('appointments').eq('id', id).update({ status });
+    const client = db.table('clients').find({ phone: appt.clientPhone, professional_id: profId });
+    if (client) {
+      db.table('clients').update(client.id, { 
+        totalBookings: (client.totalBookings || 0) + 1, 
+        lastVisit: new Date().toISOString() 
+      });
+    } else {
+      db.table('clients').insert({ 
+        professional_id: profId, 
+        name: appt.clientName, 
+        phone: appt.clientPhone, 
+        totalBookings: 1, 
+        lastVisit: new Date().toISOString() 
+      });
+    }
+
+    db.table('appointments').insert({ ...appt, professional_id: profId });
+    
+    if (user?.id === profId) {
+      fetchInitialData(profId);
+    }
+  };
+
+  const handleUpdateStatus = (id: string, status: Appointment['status']) => {
+    db.table('appointments').update(id, { status });
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
   };
 
-  const handleAddService = async (s: Omit<Service, 'id'>) => {
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    const { data } = await supabase.from('services').insert([{ ...s, professional_id: userId }]);
-    if (data) setServices(prev => [...prev, data[0]]);
+  const handleAddService = (s: Omit<Service, 'id'>) => {
+    const session = db.auth.getSession();
+    if (!session) return;
+    const newItem = db.table('services').insert({ ...s, professional_id: session.user.id });
+    setServices(prev => [...prev, newItem]);
   };
 
-  const handleDeleteService = async (id: string) => {
-    await supabase.from('services').eq('id', id).delete();
+  const handleDeleteService = (id: string) => {
+    db.table('services').delete(id);
     setServices(prev => prev.filter(s => s.id !== id));
   };
 
-  const handleToggleService = async (id: string) => {
-    const service = services.find(s => s.id === id);
-    if (!service) return;
-    await supabase.from('services').eq('id', id).update({ active: !service.active });
-    setServices(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
+  const handleToggleService = (id: string) => {
+    const s = services.find(sv => sv.id === id);
+    if (!s) return;
+    db.table('services').update(id, { active: !s.active });
+    setServices(prev => prev.map(sv => sv.id === id ? { ...sv, active: !sv.active } : sv));
   };
 
-  const handleUpdateProfile = async (u: Professional) => {
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    await supabase.from('professionals').eq('id', userId).update(u);
+  const handleUpdateProfile = (u: Professional) => {
+    const session = db.auth.getSession();
+    if (!session) return false;
+    db.table('professionals').update(session.user.id, u);
     setUser(u);
     return true;
   };
 
-  const handleUpdateConfig = async (c: BusinessConfig) => {
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    await supabase.from('business_config').eq('professional_id', userId).update(c);
+  const handleUpdateConfig = (c: BusinessConfig) => {
+    const session = db.auth.getSession();
+    if (!session) return;
+    db.table('business_config').updateWhere({ professional_id: session.user.id }, c);
     setBusinessConfig(c);
   };
 
-  // --- LÓGICA PÚBLICA (CLIENTE) ---
-
-  const handlePublicBooking = async (slug: string) => {
+  const handlePublicBooking = (slug: string) => {
     setIsLoading(true);
-    const { data: prof } = await supabase.from('professionals').eq('slug', slug).maybeSingle();
+    const cleanSlug = generateSlug(slug);
+    const prof = db.table('professionals').find({ slug: cleanSlug });
+    
     if (prof) {
-      // Fixed: Removed redundant .then(r => r) calls which were causing TS errors
-      const [svcs, cfg, appts, inacts] = await Promise.all([
-        supabase.from('services').eq('professional_id', prof.id).eq('active', true),
-        supabase.from('business_config').eq('professional_id', prof.id).maybeSingle(),
-        supabase.from('appointments').eq('professional_id', prof.id).neq('status', 'cancelled'),
-        supabase.from('blocked_dates').eq('professional_id', prof.id)
-      ]);
       setPublicProfessional(prof);
-      setPublicServices(svcs.data || []);
-      setPublicConfig(cfg.data || { interval: 60, expediente: [] });
-      setPublicAppointments(appts.data || []);
-      setPublicInactivations(inacts.data || []);
+      setPublicServices(db.table('services').where({ professional_id: prof.id, active: true }));
+      setPublicConfig(db.table('business_config').find({ professional_id: prof.id }) || { interval: 60, expediente: [] });
+      setPublicAppointments(db.table('appointments').where({ professional_id: prof.id }));
+      setPublicInactivations(db.table('blocked_dates').where({ professional_id: prof.id }));
       setIsPublicView(true);
       setCurrentView('booking');
+      setPublicError(false);
     } else {
       setIsPublicView(false);
-      await checkAuthSession();
+      setPublicError(true);
+      checkAuthSession();
     }
     setIsLoading(false);
   };
 
-  const handlePublicComplete = async (appt: Omit<Appointment, 'id'>) => {
-    const profId = publicProfessional?.id || (await supabase.from('professionals').eq('slug', publicProfessional?.slug).single()).data.id;
-    
-    // CRM: Criar ou atualizar cliente
-    // Fixed: Removed redundant .then(r => r) call
-    const { data: existingClients } = await supabase.from('clients').eq('phone', appt.clientPhone).eq('professional_id', profId);
-    const client = existingClients?.[0];
-    if (client) {
-      await supabase.from('clients').eq('id', client.id).update({ 
-        total_bookings: (client.total_bookings || 0) + 1, 
-        last_visit: new Date().toISOString() 
-      });
-    } else {
-      await supabase.from('clients').insert([{ 
-        professional_id: profId, name: appt.clientName, phone: appt.clientPhone, total_bookings: 1, last_visit: new Date().toISOString() 
-      }]);
-    }
-
-    // Salvar agendamento
-    await supabase.from('appointments').insert([{ ...appt, professional_id: profId }]);
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    db.auth.logout();
     setUser(null);
     setIsPublicView(false);
     navigate('landing');
@@ -191,7 +204,7 @@ const App: React.FC = () => {
         <BookingPage 
           professional={publicProfessional} services={publicServices} config={publicConfig} 
           appointments={publicAppointments} inactivations={publicInactivations} 
-          onComplete={handlePublicComplete} onHome={() => window.location.href = window.location.origin} 
+          onComplete={handleSaveAppointment} onHome={() => window.location.href = window.location.origin} 
         />
       );
     }
@@ -200,15 +213,24 @@ const App: React.FC = () => {
 
     switch (currentView) {
       case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} />;
-      case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} onAddManualAppointment={handlePublicComplete} />;
+      case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} onAddManualAppointment={handleSaveAppointment} inactivations={inactivations} />;
       case 'services': return <ServicesPage {...commonProps} services={services} onAdd={handleAddService} onDelete={handleDeleteService} onToggle={handleToggleService} />;
       case 'clients': return <ClientsPage {...commonProps} clients={clients} appointments={appointments} />;
-      case 'company': return <ProfilePage {...commonProps} onUpdate={handleUpdateProfile} />;
+      case 'company': return <ProfilePage {...commonProps} onUpdate={async (u) => handleUpdateProfile(u)} />;
       case 'settings': return <SettingsPage {...commonProps} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={handleUpdateConfig} />;
-      case 'inactivation': return <InactivationPage {...commonProps} inactivations={inactivations} onAdd={async (d) => { await supabase.from('blocked_dates').insert([{...d, professional_id: (await supabase.auth.getUser()).data.user?.id}]); fetchInitialData(user?.id!) }} onDelete={async (id) => { await supabase.from('blocked_dates').eq('id', id).delete(); fetchInitialData(user?.id!) }} />;
-      case 'login': return <AuthView type="login" onAuth={() => {}} onToggle={() => navigate('signup')} />;
-      case 'signup': return <AuthView type="signup" onAuth={() => {}} onToggle={() => navigate('login')} />;
-      case 'landing': return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
+      case 'inactivation': return <InactivationPage {...commonProps} inactivations={inactivations} onAdd={async (d) => { db.table('blocked_dates').insert({...d, professional_id: user?.id}); fetchInitialData(user?.id!) }} onDelete={async (id) => { db.table('blocked_dates').delete(id); fetchInitialData(user?.id!) }} />;
+      case 'login': return <AuthView type="login" onAuth={() => fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('signup')} />;
+      case 'signup': return <AuthView type="signup" onAuth={() => fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('login')} />;
+      case 'landing': return (
+        <div className="flex flex-col">
+          {publicError && (
+            <div className="bg-red-500 text-white p-4 text-center font-black text-[10px] uppercase tracking-widest animate-fade-in">
+              Agenda não encontrada. Verifique se você está no mesmo navegador onde criou sua conta.
+            </div>
+          )}
+          <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />
+        </div>
+      );
       default: return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
     }
   };

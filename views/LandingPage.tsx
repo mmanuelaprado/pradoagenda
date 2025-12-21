@@ -100,7 +100,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
                        <div className="w-6 h-6 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center text-[#FF1493] font-black text-[8px] md:text-xs">PA</div>
                        <div>
                          <p className="text-[6px] md:text-[9px] font-black uppercase tracking-widest opacity-80">Link de Agendamento</p>
-                         <p className="text-[7px] md:text-[10px] font-bold truncate max-w-[120px]">{currentHost}/?b=meu-espaco</p>
+                         <p className="text-[7px] md:text-[10px] font-bold truncate max-w-[120px]">{currentHost}/meu-espaco</p>
                        </div>
                     </div>
                   </div>

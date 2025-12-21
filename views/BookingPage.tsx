@@ -46,14 +46,15 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
   const availableTimes = useMemo(() => {
     if (!selectedDate || !selectedService || !config.expediente) return [];
     
+    // Verifica se o dia está bloqueado nas inativações
+    const isBlocked = inactivations.some(i => i.date === selectedDate);
+    if (isBlocked) return [];
+
     const dateObj = new Date(selectedDate + 'T12:00:00');
     const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' }).toLowerCase();
     const dayConfig = config.expediente.find(d => d.day.toLowerCase() === dayName);
     
     if (!dayConfig || !dayConfig.active) return [];
-
-    const isBlocked = inactivations.some(i => i.date === selectedDate);
-    if (isBlocked) return [];
 
     const slots: string[] = [];
     dayConfig.shifts.forEach(shift => {
@@ -66,10 +67,9 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
         const slotEnd = new Date(current.getTime() + (selectedService.duration * 60000));
         
         if (slotEnd <= end) {
-          // Verifica se o slot está livre na agenda do profissional
           const isOccupied = appointments.some(appt => {
+            if (appt.status === 'cancelled') return false;
             const apptDate = new Date(appt.date);
-            // Assume-se que se não tivermos a duração do outro serviço, usamos a duração padrão do atual para checagem simples
             const apptEnd = new Date(apptDate.getTime() + (selectedService.duration * 60000));
             return (current < apptEnd && slotEnd > apptDate);
           });
@@ -127,7 +127,6 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] flex flex-col font-sans">
-      {/* Header Público Simplificado */}
       <header className="p-6 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-[#FF1493] rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-pink-100">P</div>
@@ -144,14 +143,12 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
       </header>
 
       <main className="flex-grow max-w-xl mx-auto w-full p-6 pb-24">
-        {/* Barra de Progresso */}
         <div className="flex justify-center space-x-2 mb-10">
           {[1, 2, 3, 4].map(s => (
             <div key={s} className={`h-1.5 w-8 rounded-full transition-all duration-500 ${step >= s ? 'bg-[#FF1493]' : 'bg-gray-100'}`}></div>
           ))}
         </div>
 
-        {/* Passo 1: Escolha de Serviço */}
         {step === 1 && (
           <div className="animate-fade-in-up">
             <h2 className="text-2xl font-black text-black uppercase tracking-tight mb-2">Escolha o Serviço</h2>
@@ -177,7 +174,6 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
           </div>
         )}
 
-        {/* Passo 2: Calendário */}
         {step === 2 && (
           <div className="animate-fade-in-up">
             <h2 className="text-2xl font-black text-black uppercase tracking-tight mb-2">Selecione o Dia</h2>
@@ -202,16 +198,17 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
                    if (!day) return <div key={i} />;
                    const dStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                    const isPast = new Date(dStr + 'T23:59:59') < new Date();
+                   const isBlocked = inactivations.some(inv => inv.date === dStr);
                    const isSelected = selectedDate === dStr;
                    
                    return (
                      <button 
                        key={i}
-                       disabled={isPast}
+                       disabled={isPast || isBlocked}
                        onClick={() => { setSelectedDate(dStr); setStep(3); }}
                        className={`aspect-square rounded-[1.2rem] font-black text-sm flex items-center justify-center transition-all ${
                          isSelected ? 'bg-[#FF1493] text-white shadow-xl shadow-pink-100 scale-110' : 
-                         isPast ? 'opacity-5 cursor-not-allowed' : 'bg-gray-50 text-black hover:bg-pink-50 hover:text-[#FF1493]'
+                         (isPast || isBlocked) ? 'opacity-20 cursor-not-allowed bg-gray-100' : 'bg-gray-50 text-black hover:bg-pink-50 hover:text-[#FF1493]'
                        }`}
                      >
                        {day}
@@ -223,7 +220,6 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
           </div>
         )}
 
-        {/* Passo 3: Horários Disponíveis */}
         {step === 3 && (
           <div className="animate-fade-in-up">
             <h2 className="text-2xl font-black text-black uppercase tracking-tight mb-2">Qual o Horário?</h2>
@@ -249,7 +245,6 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
           </div>
         )}
 
-        {/* Passo 4: Dados Finais */}
         {step === 4 && (
           <div className="animate-fade-in-up">
             <h2 className="text-2xl font-black text-black uppercase tracking-tight mb-2">Só Mais Um Passo</h2>

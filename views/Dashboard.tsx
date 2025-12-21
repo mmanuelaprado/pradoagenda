@@ -18,7 +18,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
   const todayAppts = appointments.filter(a => a.date.startsWith(todayStr));
   
   const baseDomain = window.location.origin;
-  const publicLink = user?.slug ? `${baseDomain}/?b=${user.slug}` : '';
+  const publicLink = user?.slug ? `${baseDomain}/${user.slug}` : '';
 
   const handleCopy = () => {
     if (!publicLink) { navigate('company'); return; }
@@ -62,6 +62,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
         )}
       </header>
 
+      {/* Alerta de Simulação Local */}
+      <div className="bg-blue-50 border-2 border-blue-100 p-6 rounded-[2.5rem] mb-10 flex flex-col md:flex-row items-center gap-6 animate-fade-in">
+         <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg"><Icons.Smartphone /></div>
+         <div className="flex-grow">
+            <h4 className="font-black text-blue-900 uppercase text-xs tracking-widest mb-1">Dica de Teste (Modo Local)</h4>
+            <p className="text-[11px] font-medium text-blue-800 leading-relaxed">
+              Como este sistema está desvinculado de servidores externos, seus dados ficam salvos <strong>apenas neste navegador</strong>. 
+              Para testar o agendamento, abra o link acima em uma nova aba do <strong>mesmo navegador</strong>. 
+              Links enviados para outros celulares não funcionarão nesta versão de demonstração.
+            </p>
+         </div>
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-10">
         <div className="xl:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-50">
@@ -74,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
         </div>
 
         <div className="xl:col-span-8">
-          <div className="bg-white rounded-[2rem] md:rounded-[4rem] shadow-sm border border-gray-50 overflow-hidden">
+          <div className="bg-white rounded-[2rem] md:rounded-[4rem] shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-50 flex items-center justify-between">
               <h2 className="text-sm md:text-xl font-black text-black tracking-tight uppercase">Próximos Horários</h2>
             </div>

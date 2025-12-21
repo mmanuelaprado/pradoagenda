@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Professional, View } from '../types.ts';
 import { Icons } from '../constants.tsx';
+import { generateSlug } from '../services/db.ts';
 
 interface ProfilePageProps {
   user: Professional | null;
@@ -45,14 +46,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
   const baseDomain = window.location.origin;
 
   const handleSlugChange = (val: string) => {
-    const cleanSlug = val
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-    setFormData({...formData, slug: cleanSlug});
+    setFormData({...formData, slug: generateSlug(val)});
   };
 
   return (
@@ -85,7 +79,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[#FF1493]/60 uppercase tracking-widest">Identificador (Slug)</label>
               <div className="flex items-center bg-white border-2 border-pink-100 rounded-2xl px-5 focus-within:border-[#FF1493] transition-all">
-                 <span className="text-gray-300 font-bold mr-1 text-xs md:text-sm">{baseDomain.replace(/(^\w+:|^)\/\//, '')}/?b=</span>
+                 <span className="text-gray-300 font-bold mr-1 text-xs md:text-sm">{baseDomain.replace(/(^\w+:|^)\/\//, '')}/</span>
                  <input 
                   required
                   type="text" 
