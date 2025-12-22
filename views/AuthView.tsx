@@ -31,6 +31,7 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
           name: formData.name,
           businessName: formData.businessName
         });
+        
         if (signupError) throw signupError;
         if (data) onAuth(data as any);
       } else {
@@ -40,16 +41,22 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
         if (data) {
           onAuth(data as any);
         } else {
-          // Caso onde o maybeSingle retorna nulo (usuário não cadastrado)
           setError("E-mail não encontrado. Por favor, cadastre-se para entrar.");
         }
       }
     } catch (err: any) {
+      console.error("Erro detalhado:", err);
       const errMsg = err.message || JSON.stringify(err);
-      if (errMsg.includes("coerce") || errMsg.includes("PGRST116")) {
+      
+      // Tratamento de erros específicos em português para o usuário final
+      if (errMsg.includes("professionals_slug_key")) {
+        setError("Este nome de estabelecimento já está em uso. Tente adicionar uma diferenciação no nome (ex: " + formData.businessName + " - Centro).");
+      } else if (errMsg.includes("professionals_email_key")) {
+        setError("Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.");
+      } else if (errMsg.includes("coerce") || errMsg.includes("PGRST116")) {
         setError("E-mail não encontrado. Por favor, cadastre-se para entrar.");
       } else {
-        setError(errMsg || "Erro de autenticação.");
+        setError("Ops! Ocorreu um erro: " + (errMsg || "Tente novamente mais tarde."));
       }
     } finally {
       setLoading(false);
