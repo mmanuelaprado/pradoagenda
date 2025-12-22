@@ -1,10 +1,7 @@
 {
+  "cleanUrls": true,
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/manifest.json", "dest": "/manifest.json" },
-    { "src": "/sw.js", "dest": "/sw.js" },
-    { "src": "/icon-192.png", "dest": "/favicon/favicon.png" },
-    { "src": "/icon-512.png", "dest": "/favicon/favicon.png" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
