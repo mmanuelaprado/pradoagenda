@@ -89,7 +89,7 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
             </div>
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Senha</label>
-              <input required type="password" placeholder="Qualquer senha (Simulação)" className="w-full px-5 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:ring-2 focus:ring-[#FF1493] outline-none font-bold" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+              <input required type="password" placeholder="Digite sua senha" className="w-full px-5 py-4 rounded-xl border border-gray-100 bg-gray-50 focus:ring-2 focus:ring-[#FF1493] outline-none font-bold" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
             </div>
             <button 
               disabled={loading}
