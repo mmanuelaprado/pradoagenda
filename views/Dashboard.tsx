@@ -74,18 +74,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
         )}
       </header>
 
-      {/* Alerta de Simulação Local */}
-      <div className="bg-blue-50 border-2 border-blue-100 p-6 rounded-[2.5rem] mb-10 flex flex-col md:flex-row items-center gap-6 animate-fade-in">
-         <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg"><Icons.Smartphone /></div>
-         <div className="flex-grow">
-            <h4 className="font-black text-blue-900 uppercase text-xs tracking-widest mb-1">Dica de Teste (Modo Local)</h4>
-            <p className="text-[11px] font-medium text-blue-800 leading-relaxed">
-              Como este sistema está desvinculado de servidores externos, seus dados ficam salvos <strong>apenas neste navegador</strong>. 
-              Para testar o agendamento, abra o link acima em uma nova aba do <strong>mesmo navegador</strong>. 
-            </p>
-         </div>
-      </div>
-
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-10">
         <div className="xl:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-50">
