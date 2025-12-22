@@ -6,7 +6,7 @@
     <title>Prado Agenda - Gestão Profissional de Agendamentos</title>
     
     <!-- PWA Primary Meta Tags -->
-    <meta name="theme-color" content="#ff2f92">
+    <meta name="theme-color" content="#ec4899">
     <meta name="description" content="Sistema profissional de agendamento online para especialistas em beleza.">
     <link rel="manifest" href="/manifest.json">
     
@@ -14,14 +14,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Prado Agenda">
-    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     
     <!-- Android / Mobile Desktop Capability -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Prado Agenda">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/icon-192.png">
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -66,5 +66,10 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js");
+      }
+    </script>
   </body>
 </html>
