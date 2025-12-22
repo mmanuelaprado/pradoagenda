@@ -13,10 +13,10 @@ interface DashboardProps {
   navigate: (v: View) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onUpdateStatus, onLogout, navigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services = [], onUpdateStatus, navigate }) => {
   const [copyStatus, setCopyStatus] = useState(false);
   const todayStr = new Date().toISOString().split('T')[0];
-  const todayAppts = (appointments || []).filter(a => a.date.startsWith(todayStr));
+  const todayAppts = appointments.filter(a => a.date && a.date.startsWith(todayStr));
   
   // Busca a config para pegar a cor tema
   const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
@@ -49,7 +49,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
     <main className="p-4 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
       <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 md:mb-12 gap-6">
         <div>
-          <h1 className="text-xl md:text-4xl font-black text-black tracking-tighter uppercase mb-1">Olá, {user?.name.split(' ')[0]}!</h1>
+          <h1 className="text-xl md:text-4xl font-black text-black tracking-tighter uppercase mb-1">Olá, {user?.name?.split(' ')[0] || 'Profissional'}!</h1>
           <p className="text-[10px] md:text-sm text-gray-500 font-medium tracking-tight">Gestão inteligente para sua beleza.</p>
         </div>
         
@@ -85,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-10">
         <div className="xl:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-50">
-             <h3 className="text-[10px] font-black text-black uppercase tracking-widest mb-6 flex items-center gap-2"><Icons.Chart className="w-4 h-4" /> Hoje</h3>
+             <h3 className="text-[10px] font-black text-black uppercase tracking-widest mb-6 flex items-center gap-2"><Icons.Chart className="w-4 h-4" /> Resumo de Hoje</h3>
              <div className="grid grid-cols-2 gap-4">
                <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Faturamento</p><p className="text-xl font-black text-black">R$ {todayRevenue.toLocaleString('pt-BR')}</p></div>
                <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Clientes</p><p className="text-xl font-black text-black">{todayAppts.length}</p></div>
@@ -109,12 +109,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
                       className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-lg font-black uppercase"
                       style={{ backgroundColor: brandColor }}
                     >
-                      {appt.clientName.charAt(0)}
+                      {appt.clientName?.charAt(0) || '?'}
                     </div>
                     <div>
                       <h4 className="font-black text-black text-[13px] uppercase tracking-tight">{appt.clientName}</h4>
                       <p className="text-[9px] font-black uppercase" style={{ color: brandColor }}>{services.find(s => s.id === appt.serviceId)?.name || 'Serviço'}</p>
-                      <p className="text-[9px] font-black text-gray-300 uppercase">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-[9px] font-black text-gray-300 uppercase">{appt.date ? new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</p>
                     </div>
                   </div>
                   
