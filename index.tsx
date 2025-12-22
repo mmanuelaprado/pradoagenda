@@ -18,48 +18,29 @@ root.render(
 /**
  * REGISTRO PWA (Service Worker)
  * 
- * Versão otimizada para evitar erros de 'Invalid URL' e 'Cross-Origin'.
- * Usamos um caminho relativo simples 'sw.js' que resolve corretamente
- * em relação à localização do index.html.
+ * Este bloco garante que o app seja reconhecido como instalável.
+ * O uso de caminho relativo './sw.js' é fundamental para o funcionamento no Vercel.
  */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Registra o Service Worker usando um caminho relativo simples
-    // Isso evita falhas na construção de objetos URL em ambientes restritos
     navigator.serviceWorker
-      .register('sw.js')
+      .register('./sw.js')
       .then((registration) => {
-        console.log('PWA: Service Worker registrado com sucesso no escopo:', registration.scope);
-        
-        // Monitoramento de atualizações
-        registration.onupdatefound = () => {
-          const installingWorker = registration.installing;
-          if (installingWorker) {
-            installingWorker.onstatechange = () => {
-              if (installingWorker.state === 'installed') {
-                if (navigator.serviceWorker.controller) {
-                  console.log('PWA: Nova versão disponível! Recarregue a página.');
-                } else {
-                  console.log('PWA: Conteúdo pronto para uso offline.');
-                }
-              }
-            };
-          }
-        };
+        console.log('PWA: Service Worker ativo no escopo:', registration.scope);
       })
       .catch((error) => {
-        // Log amigável para erros comuns de ambiente de desenvolvimento
-        const isSecurityError = error.name === 'SecurityError' || error.message.includes('origin');
-        if (isSecurityError) {
-          console.warn('PWA: Registro do SW bloqueado por restrições de origem ou segurança. Isso é comum em pré-visualizações do AI Studio. O PWA funcionará perfeitamente após o deploy final.');
+        // No AI Studio (preview), este erro de origem é comum.
+        // No domínio final (Vercel), funcionará automaticamente.
+        if (error.name === 'SecurityError') {
+          console.warn('PWA: Registro de SW suspenso no ambiente de preview. Funcionará após o deploy.');
         } else {
-          console.error('PWA: Erro inesperado ao registrar Service Worker:', error);
+          console.error('PWA: Falha ao registrar Service Worker:', error);
         }
       });
   });
 }
 
-// Escuta o evento de instalação para Android/Chrome
+// Escuta o evento que permite ao navegador sugerir a instalação
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('PWA: O aplicativo pode ser instalado no dispositivo.');
+  console.log('PWA: O sistema está pronto para ser instalado como App.');
 });

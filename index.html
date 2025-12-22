@@ -9,16 +9,17 @@
     <!-- PWA Primary Meta Tags -->
     <meta name="theme-color" content="#FF1493">
     <meta name="description" content="Sistema profissional de agendamento online para especialistas em beleza.">
+    <link rel="manifest" href="manifest.json">
     
-    <!-- Apple Mobile Web App Meta Tags -->
+    <!-- Apple Mobile Web App Meta Tags (iOS Fullscreen) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Prado Agenda">
     <link rel="apple-touch-icon" href="favicon/favicon.png">
     
-    <!-- Android/General PWA Meta Tags -->
+    <!-- Android / Mobile Desktop Capability -->
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="manifest.json">
+    <meta name="application-name" content="Prado Agenda">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon/favicon.png">
@@ -34,15 +35,15 @@
       body {
         font-family: 'Poppins', sans-serif;
         -webkit-tap-highlight-color: transparent;
-        overscroll-behavior-y: contain;
+        overscroll-behavior-y: contain; /* Previne o pull-to-refresh indesejado em apps */
         background-color: #f9fafb;
+      }
+      /* Ajuste para telas com notch */
+      .pt-safe {
         padding-top: var(--safe-area-inset-top);
       }
       .pb-safe {
         padding-bottom: var(--safe-area-inset-bottom);
-      }
-      .pt-safe {
-        padding-top: var(--safe-area-inset-top);
       }
       @media (max-width: 768px) {
         ::-webkit-scrollbar {
