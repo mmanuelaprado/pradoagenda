@@ -13,28 +13,26 @@ interface ReportsPageProps {
 }
 
 const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], services = [], navigate }) => {
-  // Filtra agendamentos confirmados ou concluídos para compor a receita real e prevista
-  const financialAppts = appointments.filter(a => 
+  // Filtra agendamentos que geram receita (Confirmados ou Concluídos)
+  const financialAppts = (appointments || []).filter(a => 
     a.status === 'confirmed' || a.status === 'completed'
   );
   
   const revenue = financialAppts.reduce((acc, curr) => {
-    const service = services.find(s => s.id === curr.serviceId);
-    const price = service?.price || 0;
-    return acc + price;
+    const service = (services || []).find(s => s.id === curr.serviceId);
+    return acc + (service?.price || 0);
   }, 0);
 
-  // Busca a cor do tema do profissional ou usa o rosa padrão
+  // Busca a cor do tema com segurança
   const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
   const brandColor = config?.themeColor || '#FF1493';
 
-  // Estatísticas por serviço (apenas confirmados/concluídos)
-  const serviceStats = services.map(s => {
+  // Estatísticas por serviço
+  const serviceStats = (services || []).map(s => {
     const count = financialAppts.filter(a => a.serviceId === s.id).length;
     return { name: s.name, count, total: count * (s.price || 0) };
   }).sort((a, b) => b.total - a.total);
 
-  // Dados mockados para o gráfico semanal de performance
   const weeklyData = [
     { day: 'Seg', val: 45 },
     { day: 'Ter', val: 70 },
@@ -60,7 +58,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], serv
 
       <header className="mb-10">
         <h1 className="text-3xl font-black text-black tracking-tight uppercase">Dashboard Financeiro</h1>
-        <p className="text-gray-500 font-medium tracking-tight">Análise de faturamento baseada em agendamentos confirmados e concluídos.</p>
+        <p className="text-gray-500 font-medium tracking-tight">Análise baseada em agendamentos confirmados e concluídos.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -68,11 +66,11 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], serv
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <Icons.Finance className="w-16 h-16" />
           </div>
-          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3">Receita Sincronizada</p>
+          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3">Receita Acumulada</p>
           <h3 className="text-3xl font-black text-black tracking-tighter">R$ {revenue.toLocaleString('pt-BR')}</h3>
           <div className="mt-4 flex items-center space-x-2">
             <span className="text-green-500 text-[10px] font-black uppercase flex items-center gap-1">
-              <Icons.Check className="w-3 h-3" /> 100% Atualizado
+              <Icons.Check className="w-3 h-3" /> Sincronizado
             </span>
           </div>
         </div>
@@ -86,7 +84,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], serv
         </div>
 
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3">Total de Vendas</p>
+          <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-3">Frequência</p>
           <h3 className="text-3xl font-black text-black tracking-tighter">{financialAppts.length}</h3>
           <div className="w-full h-1.5 bg-gray-100 rounded-full mt-5 overflow-hidden">
             <div className="h-full rounded-full" style={{ width: '100%', backgroundColor: brandColor }}></div>
@@ -97,29 +95,24 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], serv
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
             <Icons.Sparkles className="w-12 h-12" />
           </div>
-          <p className="text-white/80 text-[10px] font-black uppercase tracking-widest mb-3">Performance Geral</p>
+          <p className="text-white/80 text-[10px] font-black uppercase tracking-widest mb-3">Performance IA</p>
           <h3 className="text-3xl font-black tracking-tighter">Excelente</h3>
-          <p className="text-white/40 text-[10px] mt-4 font-black uppercase tracking-widest">Dados Sincronizados Localmente</p>
+          <p className="text-white/40 text-[10px] mt-4 font-black uppercase tracking-widest">Dados Sincronizados</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-7 bg-white p-10 rounded-[3.5rem] shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-10">
-            <h2 className="text-lg font-black text-black uppercase tracking-tight">Movimentação Mensal</h2>
-            <div className="bg-gray-50 rounded-xl text-[10px] font-black uppercase px-4 py-2">
-              Visualização por Dia
-            </div>
+            <h2 className="text-lg font-black text-black uppercase tracking-tight">Fluxo de Caixa Semanal</h2>
           </div>
-          
           <div className="flex items-end justify-between h-48 gap-4 px-2">
             {weeklyData.map((d, i) => (
               <div key={i} className="flex-grow flex flex-col items-center group">
                 <div 
                   className="w-full bg-gray-50 rounded-2xl transition-all duration-500 relative group-hover:opacity-80"
                   style={{ height: `${d.val}%`, backgroundColor: brandColor }}
-                >
-                </div>
+                ></div>
                 <span className="text-[10px] font-black text-gray-300 uppercase mt-4 tracking-widest">{d.day}</span>
               </div>
             ))}
@@ -127,7 +120,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], serv
         </div>
 
         <div className="lg:col-span-5 bg-white p-10 rounded-[3.5rem] shadow-sm border border-gray-100">
-          <h2 className="text-lg font-black text-black mb-8 uppercase tracking-tight">Top Serviços Rentáveis</h2>
+          <h2 className="text-lg font-black text-black mb-8 uppercase tracking-tight">Ranking de Rentabilidade</h2>
           <div className="space-y-6">
             {serviceStats.length > 0 ? serviceStats.slice(0, 5).map((stat, i) => (
               <div key={i} className="flex items-center justify-between group">
@@ -137,22 +130,16 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], serv
                   </div>
                   <div>
                     <p className="text-sm font-black text-black uppercase tracking-tight">{stat.name}</p>
-                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{stat.count} Atendimentos</p>
+                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{stat.count} Vendas</p>
                   </div>
                 </div>
                 <p className="font-black text-black text-sm">R$ {stat.total.toLocaleString('pt-BR')}</p>
               </div>
             )) : (
-              <p className="text-center py-10 text-gray-300 font-black uppercase text-xs">Sem dados para exibir.</p>
+              <p className="text-center py-10 text-gray-300 font-black uppercase text-xs">Aguardando dados...</p>
             )}
           </div>
-          
-          <button 
-            className="w-full mt-10 py-5 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg"
-            style={{ backgroundColor: brandColor }}
-          >
-            Exportar Dados Financeiros
-          </button>
+          <button className="w-full mt-10 py-5 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg" style={{ backgroundColor: brandColor }}>Exportar Relatório</button>
         </div>
       </div>
     </main>

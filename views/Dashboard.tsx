@@ -16,9 +16,8 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services = [], onUpdateStatus, navigate }) => {
   const [copyStatus, setCopyStatus] = useState(false);
   const todayStr = new Date().toISOString().split('T')[0];
-  const todayAppts = appointments.filter(a => a.date && a.date.startsWith(todayStr));
+  const todayAppts = (appointments || []).filter(a => a.date && a.date.startsWith(todayStr));
   
-  // Busca a config para pegar a cor tema
   const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
   const brandColor = config?.themeColor || '#FF1493';
 
@@ -37,11 +36,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services
     window.open(`https://wa.me/55${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
   };
 
-  // Calcula faturamento de hoje (Confirmados + Concluídos)
+  // Faturamento hoje: Confirmados + Concluídos
   const todayRevenue = todayAppts
     .filter(a => a.status === 'confirmed' || a.status === 'completed')
     .reduce((acc, curr) => {
-      const s = services.find(serv => serv.id === curr.serviceId);
+      const s = (services || []).find(serv => serv.id === curr.serviceId);
       return acc + (s?.price || 0);
     }, 0);
 
@@ -85,10 +84,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-10">
         <div className="xl:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-50">
-             <h3 className="text-[10px] font-black text-black uppercase tracking-widest mb-6 flex items-center gap-2"><Icons.Chart className="w-4 h-4" /> Resumo de Hoje</h3>
+             <h3 className="text-[10px] font-black text-black uppercase tracking-widest mb-6 flex items-center gap-2"><Icons.Chart className="w-4 h-4" /> Caixa de Hoje</h3>
              <div className="grid grid-cols-2 gap-4">
-               <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Faturamento</p><p className="text-xl font-black text-black">R$ {todayRevenue.toLocaleString('pt-BR')}</p></div>
-               <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Clientes</p><p className="text-xl font-black text-black">{todayAppts.length}</p></div>
+               <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Receita</p><p className="text-xl font-black text-black">R$ {todayRevenue.toLocaleString('pt-BR')}</p></div>
+               <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Atendimentos</p><p className="text-xl font-black text-black">{todayAppts.length}</p></div>
              </div>
           </div>
         </div>
@@ -113,7 +112,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services
                     </div>
                     <div>
                       <h4 className="font-black text-black text-[13px] uppercase tracking-tight">{appt.clientName}</h4>
-                      <p className="text-[9px] font-black uppercase" style={{ color: brandColor }}>{services.find(s => s.id === appt.serviceId)?.name || 'Serviço'}</p>
+                      <p className="text-[9px] font-black uppercase" style={{ color: brandColor }}>{(services || []).find(s => s.id === appt.serviceId)?.name || 'Serviço'}</p>
                       <p className="text-[9px] font-black text-gray-300 uppercase">{appt.date ? new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</p>
                     </div>
                   </div>
@@ -121,27 +120,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services
                   <div className="flex items-center gap-2">
                     <button onClick={() => openWhatsApp(appt.clientPhone, appt.clientName)} className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"><Icons.WhatsApp className="w-4 h-4" /></button>
                     {appt.status === 'pending' && (
-                      <button 
-                        onClick={() => onUpdateStatus(appt.id, 'confirmed')} 
-                        className="px-4 py-2 text-white rounded-xl text-[9px] font-black uppercase tracking-widest"
-                        style={{ backgroundColor: brandColor }}
-                      >
-                        Confirmar
-                      </button>
+                      <button onClick={() => onUpdateStatus(appt.id, 'confirmed')} className="px-4 py-2 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md" style={{ backgroundColor: brandColor }}>Confirmar</button>
                     )}
                     {appt.status === 'confirmed' && (
-                      <button 
-                        onClick={() => onUpdateStatus(appt.id, 'completed')} 
-                        className="px-4 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-colors"
-                      >
-                        Concluir
-                      </button>
+                      <button onClick={() => onUpdateStatus(appt.id, 'completed')} className="px-4 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-colors shadow-md">Concluir</button>
                     )}
                     <button onClick={() => onUpdateStatus(appt.id, 'cancelled')} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Icons.Trash className="w-4 h-4" /></button>
                   </div>
                 </div>
               ))}
-              {appointments.filter(a => a.status !== 'cancelled' && a.status !== 'completed').length === 0 && <div className="p-20 text-center text-gray-300 font-black uppercase text-xs">Nenhum agendamento pendente</div>}
+              {appointments.filter(a => a.status !== 'cancelled' && a.status !== 'completed').length === 0 && <div className="p-20 text-center text-gray-300 font-black uppercase text-xs tracking-widest">Nenhum agendamento pendente</div>}
             </div>
           </div>
         </div>
