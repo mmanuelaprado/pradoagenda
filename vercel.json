@@ -1,25 +1,11 @@
 
 {
-  "rewrites": [
-    {
-      "source": "/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
-      "source": "/sw.js",
-      "destination": "/sw.js"
-    },
-    {
-      "source": "/favicon/(.*)",
-      "destination": "/favicon/$1"
-    },
-    {
-      "source": "/((?!api|manifest\\.json|sw\\.js|favicon/|.*\\.).*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+  "routes": [
+    { "src": "/manifest.json", "dest": "/manifest.json" },
+    { "src": "/sw.js", "dest": "/sw.js" },
+    { "src": "/favicon/(.*)", "dest": "/favicon/$1" },
+    { "src": "/icon-192.png", "dest": "/favicon/favicon.png" },
+    { "src": "/icon-512.png", "dest": "/favicon/favicon.png" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
