@@ -75,6 +75,7 @@ export const db = {
       store.business_config.push({
         professional_id: id,
         interval: 60,
+        themeColor: '#FF1493',
         expediente: [
           { day: 'segunda-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
           { day: 'terça-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },

@@ -9,7 +9,6 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
   const currentHost = "pradoagenda.vercel.app";
-  const whatsappLink = "https://wa.me/5571996463245";
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans overflow-x-hidden">
@@ -172,11 +171,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-12">
-            <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 bg-[#25D366] text-white px-6 py-3 rounded-full font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform shadow-xl">
-              <Icons.WhatsApp className="w-4 h-4" />
-              <span>Suporte WhatsApp</span>
+            <a 
+              href="https://instagram.com/pradosocial" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest flex items-center space-x-2"
+            >
+              <Icons.Instagram className="w-4 h-4" />
+              <span>Instagram @pradosocial</span>
             </a>
-            <button className="text-gray-400 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest">Instagram</button>
             <button className="text-gray-400 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest">Privacidade</button>
           </div>
 

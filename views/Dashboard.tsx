@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Professional, Appointment, Service, View } from '../types.ts';
 import { Icons } from '../constants.tsx';
+import { db } from '../services/db.ts';
 
 interface DashboardProps {
   user: Professional | null;
@@ -17,6 +18,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
   const todayStr = new Date().toISOString().split('T')[0];
   const todayAppts = appointments.filter(a => a.date.startsWith(todayStr));
   
+  // Busca a config para pegar a cor tema
+  const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
+  const brandColor = config?.themeColor || '#FF1493';
+
   const baseDomain = window.location.origin;
   const publicLink = user?.slug ? `${baseDomain}/${user.slug}` : '';
 
@@ -41,7 +46,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
         </div>
         
         {user?.slug ? (
-          <div className="bg-white px-5 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 max-w-md w-full md:w-auto hover:border-[#FF1493] transition-colors">
+          <div 
+            className="bg-white px-5 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 max-w-md w-full md:w-auto transition-colors"
+            style={{ borderColor: brandColor + '40' }}
+          >
              <div className="flex-grow min-w-0">
                <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Seu Link Público</p>
                <p className="text-[11px] font-bold text-black truncate">{publicLink.replace(/(^\w+:|^)\/\//, '')}</p>
@@ -50,7 +58,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
                <button onClick={handleCopy} className={`p-2 rounded-xl transition-all ${copyStatus ? 'bg-green-500 text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}>
                  {copyStatus ? <Icons.Check className="w-3.5 h-3.5" /> : <Icons.Copy className="w-3.5 h-3.5" />}
                </button>
-               <button onClick={() => window.open(publicLink, '_blank')} className="p-2 rounded-xl bg-black text-white shadow-lg hover:scale-105 transition-transform">
+               <button 
+                onClick={() => window.open(publicLink, '_blank')} 
+                className="p-2 rounded-xl text-white shadow-lg hover:scale-105 transition-transform"
+                style={{ backgroundColor: brandColor }}
+               >
                  <Icons.Eye className="w-3.5 h-3.5" />
                </button>
              </div>
@@ -70,7 +82,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
             <p className="text-[11px] font-medium text-blue-800 leading-relaxed">
               Como este sistema está desvinculado de servidores externos, seus dados ficam salvos <strong>apenas neste navegador</strong>. 
               Para testar o agendamento, abra o link acima em uma nova aba do <strong>mesmo navegador</strong>. 
-              Links enviados para outros celulares não funcionarão nesta versão de demonstração.
             </p>
          </div>
       </div>
@@ -95,10 +106,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
               {appointments.filter(a => a.status !== 'cancelled').slice(0, 10).map((appt) => (
                 <div key={appt.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-gray-50/50 transition-colors">
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-[#FF1493] text-lg font-black uppercase">{appt.clientName.charAt(0)}</div>
+                    <div 
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-lg font-black uppercase"
+                      style={{ backgroundColor: brandColor }}
+                    >
+                      {appt.clientName.charAt(0)}
+                    </div>
                     <div>
                       <h4 className="font-black text-black text-[13px] uppercase tracking-tight">{appt.clientName}</h4>
-                      <p className="text-[9px] font-black text-[#FF1493] uppercase">{services.find(s => s.id === appt.serviceId)?.name || 'Serviço'}</p>
+                      <p className="text-[9px] font-black uppercase" style={{ color: brandColor }}>{services.find(s => s.id === appt.serviceId)?.name || 'Serviço'}</p>
                       <p className="text-[9px] font-black text-gray-300 uppercase">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                   </div>
@@ -106,7 +122,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
                   <div className="flex items-center gap-2">
                     <button onClick={() => openWhatsApp(appt.clientPhone, appt.clientName)} className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"><Icons.WhatsApp className="w-4 h-4" /></button>
                     {appt.status === 'pending' && (
-                      <button onClick={() => onUpdateStatus(appt.id, 'confirmed')} className="px-4 py-2 bg-black text-white rounded-xl text-[9px] font-black uppercase tracking-widest">Confirmar</button>
+                      <button 
+                        onClick={() => onUpdateStatus(appt.id, 'confirmed')} 
+                        className="px-4 py-2 text-white rounded-xl text-[9px] font-black uppercase tracking-widest"
+                        style={{ backgroundColor: brandColor }}
+                      >
+                        Confirmar
+                      </button>
                     )}
                     <button onClick={() => onUpdateStatus(appt.id, 'cancelled')} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Icons.Trash className="w-4 h-4" /></button>
                   </div>

@@ -10,8 +10,6 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => {
-  const whatsappLink = "https://wa.me/5571996463245";
-  
   const menuItems: { view: View; icon: React.FC; label: string }[] = [
     { view: 'dashboard', icon: Icons.Home, label: 'Início' },
     { view: 'agenda', icon: Icons.Calendar, label: 'Agenda' },
@@ -51,16 +49,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => 
       </nav>
 
       <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
-        <a 
-          href={whatsappLink} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="flex items-center space-x-3 p-3 text-green-400 hover:bg-green-400/10 rounded-xl transition-all group"
-        >
-          <Icons.WhatsApp className="group-hover:scale-110 transition-transform" />
-          <span className="font-black text-[10px] uppercase tracking-widest">Suporte Técnico</span>
-        </a>
-
         <button 
           onClick={onLogout} 
           className="w-full flex items-center space-x-3 p-3 text-gray-400 hover:text-red-400 transition-colors"

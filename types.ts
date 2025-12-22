@@ -32,6 +32,7 @@ export interface Professional {
   slug: string; // for the public link
   bio?: string;
   instagram?: string;
+  id?: string;
 }
 
 export interface Shift {
@@ -49,6 +50,7 @@ export interface DayExpediente {
 export interface BusinessConfig {
   interval: 15 | 30 | 45 | 60;
   expediente: DayExpediente[];
+  themeColor?: string;
 }
 
 export type View = 
