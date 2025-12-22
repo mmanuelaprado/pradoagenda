@@ -31,11 +31,12 @@ export const db = {
       return session ? JSON.parse(session) : null;
     },
     login: async (email: string) => {
+      // Usamos maybeSingle para não disparar erro caso não encontre nada
       const { data, error } = await supabase
         .from('professionals')
         .select('*')
         .eq('email', email.toLowerCase())
-        .single();
+        .maybeSingle();
       
       if (data) {
         localStorage.setItem('supabase.auth.token', JSON.stringify({ user: data }));

@@ -36,14 +36,21 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
       } else {
         const { data, error: loginError } = await db.auth.login(formData.email);
         if (loginError) throw loginError;
+        
         if (data) {
           onAuth(data as any);
         } else {
-          setError("E-mail não cadastrado ou erro na conexão.");
+          // Caso onde o maybeSingle retorna nulo (usuário não cadastrado)
+          setError("E-mail não encontrado. Por favor, cadastre-se para entrar.");
         }
       }
     } catch (err: any) {
-      setError(err.message || "Erro de autenticação.");
+      const errMsg = err.message || JSON.stringify(err);
+      if (errMsg.includes("coerce") || errMsg.includes("PGRST116")) {
+        setError("E-mail não encontrado. Por favor, cadastre-se para entrar.");
+      } else {
+        setError(errMsg || "Erro de autenticação.");
+      }
     } finally {
       setLoading(false);
     }
@@ -70,7 +77,11 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
             {type === 'login' ? 'Bem-vinda(o)!' : 'Comece agora'}
           </h1>
           
-          {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-bold mb-6">{error}</div>}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xs font-bold mb-6 border border-red-100 animate-shake">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {type === 'signup' && (
@@ -108,6 +119,16 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
           </div>
         </div>
       </div>
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        .animate-shake {
+          animation: shake 0.2s ease-in-out 0s 2;
+        }
+      `}</style>
     </div>
   );
 };
