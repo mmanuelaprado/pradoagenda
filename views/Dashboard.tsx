@@ -16,7 +16,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onUpdateStatus, onLogout, navigate }) => {
   const [copyStatus, setCopyStatus] = useState(false);
   const todayStr = new Date().toISOString().split('T')[0];
-  const todayAppts = appointments.filter(a => a.date.startsWith(todayStr));
+  const todayAppts = (appointments || []).filter(a => a.date.startsWith(todayStr));
   
   // Busca a config para pegar a cor tema
   const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
@@ -37,10 +37,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
     window.open(`https://wa.me/55${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
   };
 
+  // Calcula faturamento de hoje (Confirmados + Concluídos)
+  const todayRevenue = todayAppts
+    .filter(a => a.status === 'confirmed' || a.status === 'completed')
+    .reduce((acc, curr) => {
+      const s = services.find(serv => serv.id === curr.serviceId);
+      return acc + (s?.price || 0);
+    }, 0);
+
   return (
-    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full">
+    <main className="p-4 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
       <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 md:mb-12 gap-6">
-        <div className="animate-fade-in">
+        <div>
           <h1 className="text-xl md:text-4xl font-black text-black tracking-tighter uppercase mb-1">Olá, {user?.name.split(' ')[0]}!</h1>
           <p className="text-[10px] md:text-sm text-gray-500 font-medium tracking-tight">Gestão inteligente para sua beleza.</p>
         </div>
@@ -69,7 +77,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
           </div>
         ) : (
           <button onClick={() => navigate('company')} className="bg-pink-50 border border-pink-200 px-6 py-4 rounded-3xl flex items-center gap-4 animate-pulse">
-            <div className="text-left"><p className="text-[11px] font-bold text-black uppercase">Clique para configurar seu link público</p></div>
+            <div className="text-left"><p className="text-[11px] font-bold text-black uppercase">Configurar link público</p></div>
           </button>
         )}
       </header>
@@ -79,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-50">
              <h3 className="text-[10px] font-black text-black uppercase tracking-widest mb-6 flex items-center gap-2"><Icons.Chart className="w-4 h-4" /> Hoje</h3>
              <div className="grid grid-cols-2 gap-4">
-               <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Previsão</p><p className="text-xl font-black text-black">R$ {todayAppts.reduce((acc, curr) => acc + (services.find(s => s.id === curr.serviceId)?.price || 0), 0)}</p></div>
+               <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Faturamento</p><p className="text-xl font-black text-black">R$ {todayRevenue.toLocaleString('pt-BR')}</p></div>
                <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Clientes</p><p className="text-xl font-black text-black">{todayAppts.length}</p></div>
              </div>
           </div>
@@ -91,7 +99,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
               <h2 className="text-sm md:text-xl font-black text-black tracking-tight uppercase">Próximos Horários</h2>
             </div>
             <div className="divide-y divide-gray-50">
-              {appointments.filter(a => a.status !== 'cancelled').slice(0, 10).map((appt) => (
+              {appointments
+                .filter(a => a.status !== 'cancelled' && a.status !== 'completed')
+                .slice(0, 10)
+                .map((appt) => (
                 <div key={appt.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-gray-50/50 transition-colors">
                   <div className="flex items-center space-x-4">
                     <div 
@@ -118,11 +129,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments, services, onU
                         Confirmar
                       </button>
                     )}
+                    {appt.status === 'confirmed' && (
+                      <button 
+                        onClick={() => onUpdateStatus(appt.id, 'completed')} 
+                        className="px-4 py-2 bg-green-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-green-700 transition-colors"
+                      >
+                        Concluir
+                      </button>
+                    )}
                     <button onClick={() => onUpdateStatus(appt.id, 'cancelled')} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Icons.Trash className="w-4 h-4" /></button>
                   </div>
                 </div>
               ))}
-              {appointments.length === 0 && <div className="p-20 text-center text-gray-300 font-black uppercase text-xs">Nenhum agendamento</div>}
+              {appointments.filter(a => a.status !== 'cancelled' && a.status !== 'completed').length === 0 && <div className="p-20 text-center text-gray-300 font-black uppercase text-xs">Nenhum agendamento pendente</div>}
             </div>
           </div>
         </div>

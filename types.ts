@@ -14,7 +14,7 @@ export interface Appointment {
   clientName: string;
   clientPhone: string;
   date: string; // ISO string
-  status: 'confirmed' | 'pending' | 'cancelled';
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
 }
 
 export interface Client {

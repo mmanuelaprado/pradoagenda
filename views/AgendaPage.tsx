@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Professional, Appointment, Service, View } from '../types.ts';
 import { Icons } from '../constants.tsx';
+import { db } from '../services/db.ts';
 
 interface AgendaPageProps {
   user: Professional | null;
@@ -21,6 +22,9 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
   const [viewDate, setViewDate] = useState(new Date());
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualForm, setManualForm] = useState({ clientName: '', clientPhone: '', serviceId: '', time: '09:00' });
+
+  const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
+  const brandColor = config?.themeColor || '#FF1493';
 
   const dailyAppointments = appointments.filter(a => 
     new Date(a.date).toISOString().split('T')[0] === selectedDate
@@ -55,7 +59,8 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
     <main className="p-4 md:p-10 max-w-7xl mx-auto w-full pb-24 md:pb-10 animate-fade-in">
       <button 
         onClick={() => navigate('dashboard')}
-        className="flex items-center text-gray-400 hover:text-[#FF1493] mb-6 transition-colors font-black text-[10px] uppercase tracking-[0.2em] group"
+        className="flex items-center text-gray-400 hover:text-brand mb-6 transition-colors font-black text-[10px] uppercase tracking-[0.2em] group"
+        style={{ color: brandColor }}
       >
         <span className="mr-2 group-hover:-translate-x-1 transition-transform">
           <Icons.ArrowLeft />
@@ -70,7 +75,8 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
         </div>
         <button 
           onClick={() => setShowManualModal(true)}
-          className="bg-[#FF1493] text-white px-8 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-pink-700 transition-all shadow-xl shadow-pink-100 flex items-center space-x-2"
+          className="text-white px-8 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center space-x-2"
+          style={{ backgroundColor: brandColor }}
         >
           <Icons.Plus />
           <span>Agendamento Manual</span>
@@ -109,12 +115,13 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
                       <button
                         onClick={() => setSelectedDate(dayDate!)}
                         className={`w-full h-full rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center relative ${
-                          isSelected ? 'bg-[#FF1493] text-white shadow-xl shadow-pink-200 scale-110 z-10' : 
-                          isDayBlocked ? 'bg-gray-100 text-gray-300' : 'text-black hover:bg-pink-50'
+                          isSelected ? 'text-white shadow-xl scale-110 z-10' : 
+                          isDayBlocked ? 'bg-gray-100 text-gray-300' : 'text-black hover:bg-gray-100'
                         }`}
+                        style={{ backgroundColor: isSelected ? brandColor : '' }}
                       >
                         {day}
-                        {apptOnDay && !isSelected && <span className="absolute bottom-2 w-1.5 h-1.5 bg-[#FF1493] rounded-full"></span>}
+                        {apptOnDay && !isSelected && <span className="absolute bottom-2 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: brandColor }}></span>}
                         {isDayBlocked && !isSelected && <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-gray-300 rounded-full"></span>}
                       </button>
                     ) : null}
@@ -136,8 +143,8 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
           )}
 
           <div className="flex items-center space-x-4 mb-6 px-4">
-             <div className="w-2 h-2 rounded-full bg-[#FF1493]"></div>
-             <span className="font-black text-black uppercase tracking-widest text-xs">Visitas para {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</span>
+             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: brandColor }}></div>
+             <span className="font-black text-black uppercase tracking-widest text-xs">Atendimentos para {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</span>
           </div>
           
           {dailyAppointments.length > 0 ? dailyAppointments.map((appt) => {
@@ -146,13 +153,13 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
               <div key={appt.id} className="bg-white p-8 rounded-[3rem] shadow-sm border border-gray-50 flex flex-col items-stretch hover:shadow-xl transition-all group">
                 <div className="flex flex-col md:flex-row items-center justify-between w-full gap-6">
                   <div className="flex items-center space-x-6 w-full md:w-auto">
-                    <div className="bg-gray-50 px-6 py-4 rounded-3xl text-center min-w-[100px] group-hover:bg-[#FF1493] group-hover:text-white transition-all">
+                    <div className="bg-gray-50 px-6 py-4 rounded-3xl text-center min-w-[100px] group-hover:text-white transition-all" style={{ '--hover-bg': brandColor } as any}>
                       <p className="text-2xl font-black leading-none">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                       <p className="text-[10px] font-black uppercase tracking-widest mt-1 opacity-50">Horário</p>
                     </div>
                     <div>
                       <h4 className="font-black text-black text-xl tracking-tight uppercase">{appt.clientName}</h4>
-                      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1">{service?.name || 'Agendamento Manual'}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest mt-1" style={{ color: brandColor }}>{service?.name || 'Agendamento Manual'}</p>
                     </div>
                   </div>
                   
@@ -163,6 +170,7 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
                     </div>
                     <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 ${
                       appt.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' : 
+                      appt.status === 'completed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                       appt.status === 'cancelled' ? 'bg-red-50 text-red-600 border-red-100' :
                       'bg-yellow-50 text-yellow-600 border-yellow-100'
                     }`}>
@@ -172,18 +180,30 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-50 flex justify-end gap-3">
-                  <button 
-                    onClick={() => onUpdateStatus(appt.id, 'confirmed')}
-                    className="flex-1 md:flex-none px-6 py-3 bg-green-50 text-green-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all"
-                  >
-                    Confirmar
-                  </button>
-                  <button 
-                    onClick={() => onUpdateStatus(appt.id, 'cancelled')}
-                    className="flex-1 md:flex-none px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all"
-                  >
-                    Cancelar
-                  </button>
+                  {appt.status !== 'completed' && appt.status !== 'cancelled' && (
+                    <button 
+                      onClick={() => onUpdateStatus(appt.id, 'completed')}
+                      className="flex-1 md:flex-none px-6 py-3 bg-green-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-green-700 transition-all"
+                    >
+                      Concluir Atendimento
+                    </button>
+                  )}
+                  {appt.status === 'pending' && (
+                    <button 
+                      onClick={() => onUpdateStatus(appt.id, 'confirmed')}
+                      className="flex-1 md:flex-none px-6 py-3 bg-green-50 text-green-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-green-600 hover:text-white transition-all"
+                    >
+                      Confirmar
+                    </button>
+                  )}
+                  {appt.status !== 'cancelled' && appt.status !== 'completed' && (
+                    <button 
+                      onClick={() => onUpdateStatus(appt.id, 'cancelled')}
+                      className="flex-1 md:flex-none px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all"
+                    >
+                      Cancelar
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -226,11 +246,18 @@ const AgendaPage: React.FC<AgendaPageProps> = ({
                    <input required type="time" className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-100 outline-none font-bold text-black" value={manualForm.time} onChange={e => setManualForm({...manualForm, time: e.target.value})} />
                  </div>
                </div>
-               <button className="w-full bg-[#FF1493] text-white py-5 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-pink-100 mt-4 active:scale-95 transition-all">Confirmar no Sistema</button>
+               <button className="w-full text-white py-5 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl mt-4 active:scale-95 transition-all" style={{ backgroundColor: brandColor }}>Confirmar no Sistema</button>
              </form>
           </div>
         </div>
       )}
+      <style>{`
+        .group:hover .group-hover\\:text-white { color: white !important; }
+        .group:hover .group-hover\\:bg-brand { background-color: ${brandColor} !important; }
+        .group:hover .group-hover\\:bg-\\[\\#FF1493\\] { background-color: ${brandColor} !important; }
+        .group:hover .group-hover\\:bg-pink-50 { background-color: ${brandColor}20 !important; }
+        .group:hover .group-hover\\:bg-gray-50 { background-color: ${brandColor} !important; }
+      `}</style>
     </main>
   );
 };
