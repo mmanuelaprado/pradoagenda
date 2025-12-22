@@ -1,145 +1,115 @@
 
-// Engine de Dados Local (Prado DB)
-// Gerenciamento de persistência local para o sistema SaaS.
+import { createClient } from '@supabase/supabase-js';
 
-const STORAGE_KEY = 'prado_agenda_v2_db';
+// Conexão oficial com o projeto Supabase fornecido pelo usuário
+const SUPABASE_URL = 'https://acpyjpbkigjnizvsbdoi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_5IUT2-3ML9WkM5BFcV_8Sg_x-N0BmHp';
 
-// Utilitário para gerar slug consistente
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 export const generateSlug = (text: string) => {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
-    .replace(/[^a-z0-9]/g, "-")      // Substitui caracteres especiais por -
-    .replace(/-+/g, "-")             // Remove traços duplos
-    .replace(/^-|-$/g, "");          // Remove traços no início e fim
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 };
 
-interface Database {
-  professionals: any[];
-  services: any[];
-  appointments: any[];
-  clients: any[];
-  business_config: any[];
-  blocked_dates: any[];
-  session: { user: any } | null;
-}
-
-const getDB = (): Database => {
-  const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) {
-    return {
-      professionals: [],
-      services: [],
-      appointments: [],
-      clients: [],
-      business_config: [],
-      blocked_dates: [],
-      session: null
-    };
-  }
-  return JSON.parse(data);
-};
-
-const saveDB = (db: Database) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-};
-
+// Interface unificada para persistência na nuvem
 export const db = {
   auth: {
-    getSession: () => getDB().session,
-    login: (email: string) => {
-      const store = getDB();
-      const user = store.professionals.find(p => p.email.toLowerCase() === email.toLowerCase());
-      if (user) {
-        store.session = { user: { id: user.id, email: user.email } };
-        saveDB(store);
-        return user;
-      }
-      return null;
+    getSession: () => {
+      const session = localStorage.getItem('supabase.auth.token');
+      return session ? JSON.parse(session) : null;
     },
-    signup: (data: { email: string, name: string, businessName: string }) => {
-      const store = getDB();
+    login: async (email: string) => {
+      const { data, error } = await supabase
+        .from('professionals')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
+      
+      if (data) {
+        localStorage.setItem('supabase.auth.token', JSON.stringify({ user: data }));
+      }
+      return { data, error };
+    },
+    signup: async (userData: { email: string, name: string, businessName: string }) => {
       const id = Math.random().toString(36).substr(2, 9);
       const newUser = {
         id,
-        email: data.email,
-        name: data.name,
-        businessName: data.businessName,
-        slug: generateSlug(data.businessName),
-        created_at: new Date().toISOString()
+        email: userData.email.toLowerCase(),
+        name: userData.name,
+        businessName: userData.businessName,
+        slug: generateSlug(userData.businessName),
       };
-      store.professionals.push(newUser);
-      store.session = { user: { id, email: data.email } };
-      
-      store.business_config.push({
-        professional_id: id,
-        interval: 60,
-        themeColor: '#FF1493',
-        expediente: [
-          { day: 'segunda-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-          { day: 'terça-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-          { day: 'quarta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-          { day: 'quinta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-          { day: 'sexta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-          { day: 'sábado', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: false}] },
-          { day: 'domingo', active: false, shifts: [{start: '09:00', end: '12:00', active: false}, {start: '13:00', end: '18:00', active: false}] }
-        ]
-      });
 
-      saveDB(store);
-      return newUser;
+      const { data, error } = await supabase.from('professionals').insert([newUser]).select().single();
+      
+      if (data) {
+        // Inicializa configuração padrão de negócio no Supabase
+        await supabase.from('business_config').insert([{
+          professional_id: data.id,
+          interval: 60,
+          themeColor: '#FF1493',
+          expediente: [
+            { day: 'segunda-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'terça-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'quarta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'quinta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'sexta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'sábado', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: false}] },
+            { day: 'domingo', active: false, shifts: [{start: '09:00', end: '12:00', active: false}, {start: '13:00', end: '18:00', active: false}] }
+          ]
+        }]);
+        localStorage.setItem('supabase.auth.token', JSON.stringify({ user: data }));
+      }
+      return { data, error };
     },
     logout: () => {
-      const store = getDB();
-      store.session = null;
-      saveDB(store);
+      localStorage.removeItem('supabase.auth.token');
     }
   },
 
-  table: (name: keyof Omit<Database, 'session'>) => ({
-    all: () => getDB()[name],
-    where: (filters: Record<string, any>) => {
-      return getDB()[name].filter((item: any) => 
-        Object.entries(filters).every(([key, val]) => item[key] === val)
-      );
+  table: (tableName: string) => ({
+    all: async () => {
+      const { data } = await supabase.from(tableName).select('*');
+      return data || [];
     },
-    find: (filters: Record<string, any>) => {
-      return getDB()[name].find((item: any) => 
-        Object.entries(filters).every(([key, val]) => {
-          if (typeof val === 'string' && typeof item[key] === 'string') {
-             return item[key].toLowerCase() === val.toLowerCase();
-          }
-          return item[key] === val;
-        })
-      );
-    },
-    insert: (data: any) => {
-      const store = getDB();
-      const newItem = { ...data, id: Math.random().toString(36).substr(2, 9), created_at: new Date().toISOString() };
-      store[name].push(newItem);
-      saveDB(store);
-      return newItem;
-    },
-    update: (id: string, patch: any) => {
-      const store = getDB();
-      store[name] = store[name].map((item: any) => 
-        item.id === id ? { ...item, ...patch } : item
-      );
-      saveDB(store);
-    },
-    updateWhere: (filters: Record<string, any>, patch: any) => {
-      const store = getDB();
-      store[name] = store[name].map((item: any) => {
-        const match = Object.entries(filters).every(([key, val]) => item[key] === val);
-        return match ? { ...item, ...patch } : item;
+    where: async (filters: Record<string, any>) => {
+      let query = supabase.from(tableName).select('*');
+      Object.entries(filters).forEach(([key, val]) => {
+        query = query.eq(key, val);
       });
-      saveDB(store);
+      const { data } = await query;
+      return data || [];
     },
-    delete: (id: string) => {
-      const store = getDB();
-      store[name] = store[name].filter((item: any) => item.id !== id);
-      saveDB(store);
+    find: async (filters: Record<string, any>) => {
+      let query = supabase.from(tableName).select('*');
+      Object.entries(filters).forEach(([key, val]) => {
+        query = query.eq(key, val);
+      });
+      const { data } = await query.single();
+      return data;
+    },
+    insert: async (item: any) => {
+      const { data } = await supabase.from(tableName).insert([item]).select().single();
+      return data;
+    },
+    update: async (id: string, patch: any) => {
+      await supabase.from(tableName).update(patch).eq('id', id);
+    },
+    updateWhere: async (filters: Record<string, any>, patch: any) => {
+      let query = supabase.from(tableName).update(patch);
+      Object.entries(filters).forEach(([key, val]) => {
+        query = query.eq(key, val);
+      });
+      await query;
+    },
+    delete: async (id: string) => {
+      await supabase.from(tableName).delete().eq('id', id);
     }
   })
 };

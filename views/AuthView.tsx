@@ -26,29 +26,31 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
 
     try {
       if (type === 'signup') {
-        const newUser = db.auth.signup({
+        const { data, error: signupError } = await db.auth.signup({
           email: formData.email,
           name: formData.name,
           businessName: formData.businessName
         });
-        onAuth(newUser as any);
+        if (signupError) throw signupError;
+        if (data) onAuth(data as any);
       } else {
-        const user = db.auth.login(formData.email);
-        if (user) {
-          onAuth(user as any);
+        const { data, error: loginError } = await db.auth.login(formData.email);
+        if (loginError) throw loginError;
+        if (data) {
+          onAuth(data as any);
         } else {
-          setError("E-mail não cadastrado.");
+          setError("E-mail não cadastrado ou erro na conexão.");
         }
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Erro de autenticação.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className="min-h-screen flex flex-col md:flex-row animate-fade-in">
       <div className="md:w-2/5 bg-black flex flex-col justify-center p-12 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-pink-600 rounded-full blur-[100px] opacity-20 -translate-y-1/2"></div>
         <div className="max-w-md mx-auto relative z-10">
@@ -59,7 +61,7 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
             <span className="text-2xl font-black tracking-tighter uppercase">Pradoagenda</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-black mb-6 leading-none tracking-tight">O sistema que sua beleza merece.</h2>
-          <p className="text-gray-400 text-lg font-medium">Sincronização total. Dados seguros localmente.</p>
+          <p className="text-gray-400 text-lg font-medium">Sincronização em tempo real com Supabase.</p>
         </div>
       </div>
       <div className="md:w-3/5 bg-white flex flex-col justify-center p-8 md:p-24">

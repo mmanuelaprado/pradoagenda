@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Professional, Appointment, Service, View } from '../types.ts';
+import { Professional, Appointment, Service, View, BusinessConfig } from '../types.ts';
 import { Icons } from '../constants.tsx';
 import { db } from '../services/db.ts';
 
@@ -13,17 +13,18 @@ interface AgendaPageProps {
   onAddManualAppointment: (a: Omit<Appointment, 'id'>) => void;
   onUpdateStatus: (id: string, status: Appointment['status']) => void;
   inactivations?: any[];
+  config: BusinessConfig | null;
 }
 
 const AgendaPage: React.FC<AgendaPageProps> = ({ 
-  user, appointments, services, onLogout, navigate, onAddManualAppointment, onUpdateStatus, inactivations = [] 
+  user, appointments, services, onLogout, navigate, onAddManualAppointment, onUpdateStatus, inactivations = [], config 
 }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [viewDate, setViewDate] = useState(new Date());
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualForm, setManualForm] = useState({ clientName: '', clientPhone: '', serviceId: '', time: '09:00' });
 
-  const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
+  // Fix: Using config from props to avoid async call in component body which returned a Promise
   const brandColor = config?.themeColor || '#FF1493';
 
   const dailyAppointments = appointments.filter(a => 

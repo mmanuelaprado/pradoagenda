@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Professional, Appointment, Service, View } from '../types.ts';
+import { Professional, Appointment, Service, View, BusinessConfig } from '../types.ts';
 import { Icons } from '../constants.tsx';
 import { db } from '../services/db.ts';
 
@@ -10,9 +10,10 @@ interface ReportsPageProps {
   services: Service[];
   onLogout: () => void;
   navigate: (v: View) => void;
+  config: BusinessConfig | null;
 }
 
-const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], services = [], navigate }) => {
+const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], services = [], navigate, config }) => {
   // Filtra agendamentos que geram receita (Confirmados ou Concluídos)
   const financialAppts = (appointments || []).filter(a => 
     a.status === 'confirmed' || a.status === 'completed'
@@ -23,8 +24,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ user, appointments = [], serv
     return acc + (service?.price || 0);
   }, 0);
 
-  // Busca a cor do tema com segurança
-  const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
+  // Fix: Using config from props to avoid async call in component body which returned a Promise
   const brandColor = config?.themeColor || '#FF1493';
 
   // Estatísticas por serviço

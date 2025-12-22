@@ -15,15 +15,25 @@ root.render(
   </React.StrictMode>
 );
 
-// Registro do Service Worker para PWA
+// Registro resiliente do Service Worker para PWA
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(registration => {
+  window.addEventListener('load', async () => {
+    try {
+      // Verifica se estamos em localhost ou domínio seguro para evitar erros de origem em previews
+      const isLocalhost = Boolean(
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '[::1]' ||
+        window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
+      );
+
+      // Só tenta registrar se não estiver em um frame restrito ou se for HTTPS
+      if (window.location.protocol === 'https:' || isLocalhost) {
+        const registration = await navigator.serviceWorker.register('./sw.js');
         console.log('SW registrado com sucesso:', registration.scope);
-      })
-      .catch(error => {
-        console.log('Falha ao registrar o SW:', error);
-      });
+      }
+    } catch (error) {
+      // Silencia erros de origem em ambientes de desenvolvimento (Studio/Frames)
+      console.warn('Registro de Service Worker ignorado neste ambiente:', error);
+    }
   });
 }

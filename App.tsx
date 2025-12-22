@@ -25,7 +25,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<Professional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Estados Admin
+  // Estados de Dados Administrativos
   const [businessConfig, setBusinessConfig] = useState<BusinessConfig | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -50,46 +50,54 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const init = () => {
+    const init = async () => {
       const pathSlug = window.location.pathname.split('/').filter(Boolean)[0];
       const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps', 'finance'];
       
       if (pathSlug && !protectedRoutes.includes(pathSlug) && !pathSlug.includes('.')) {
-        handlePublicBooking(pathSlug);
+        await handlePublicBooking(pathSlug);
       } else {
-        checkAuthSession();
+        await checkAuthSession();
       }
     };
     init();
   }, []);
 
-  const checkAuthSession = () => {
+  const checkAuthSession = async () => {
     const session = db.auth.getSession();
-    if (session) {
-      fetchInitialData(session.user.id);
+    if (session && session.user) {
+      await fetchInitialData(session.user.id);
     } else {
       setIsLoading(false);
     }
   };
 
-  const fetchInitialData = (userId: string) => {
+  const fetchInitialData = async (userId: string) => {
     setIsLoading(true);
     try {
-      const prof = db.table('professionals').find({ id: userId });
+      const prof = await db.table('professionals').find({ id: userId });
       if (prof) {
         setUser(prof);
-        setServices(db.table('services').where({ professional_id: userId }));
-        setAppointments(db.table('appointments').where({ professional_id: userId }));
-        setClients(db.table('clients').where({ professional_id: userId }));
-        setBusinessConfig(db.table('business_config').find({ professional_id: userId }));
-        setInactivations(db.table('blocked_dates').where({ professional_id: userId }));
-        // Em um cenário SaaS real, buscaríamos profissionais do mesmo businessName
-        setProfessionals(db.table('professionals').where({ businessName: prof.businessName }));
+        const [svs, appts, cls, config, blocks, pros] = await Promise.all([
+          db.table('services').where({ professional_id: userId }),
+          db.table('appointments').where({ professional_id: userId }),
+          db.table('clients').where({ professional_id: userId }),
+          db.table('business_config').find({ professional_id: userId }),
+          db.table('blocked_dates').where({ professional_id: userId }),
+          db.table('professionals').where({ businessName: prof.businessName })
+        ]);
+
+        setServices(svs);
+        setAppointments(appts);
+        setClients(cls);
+        setBusinessConfig(config);
+        setInactivations(blocks);
+        setProfessionals(pros);
       }
 
       if (['landing', 'login', 'signup'].includes(currentView)) navigate('dashboard');
     } catch (e) { 
-      console.error("Erro ao carregar dados:", e); 
+      console.error("Erro ao sincronizar com Supabase:", e); 
     } finally { 
       setIsLoading(false); 
     }
@@ -99,15 +107,15 @@ const App: React.FC = () => {
     const profId = user?.id || publicProfessional?.id;
     if (!profId) return;
     
-    // Atualiza ou cria cliente
-    const client = db.table('clients').find({ phone: appt.clientPhone, professional_id: profId });
+    // CRM Inteligente: Atualiza ou cria cliente baseado no telefone
+    const client = await db.table('clients').find({ phone: appt.clientPhone, professional_id: profId });
     if (client) {
-      db.table('clients').update(client.id, { 
+      await db.table('clients').update(client.id, { 
         totalBookings: (client.totalBookings || 0) + 1, 
         lastVisit: new Date().toISOString() 
       });
     } else {
-      db.table('clients').insert({ 
+      await db.table('clients').insert({ 
         professional_id: profId, 
         name: appt.clientName, 
         phone: appt.clientPhone, 
@@ -116,35 +124,41 @@ const App: React.FC = () => {
       });
     }
     
-    db.table('appointments').insert({ ...appt, professional_id: profId });
+    await db.table('appointments').insert({ ...appt, professional_id: profId });
     if (user?.id) fetchInitialData(user.id);
   };
 
-  const handleUpdateStatus = (id: string, status: Appointment['status']) => {
-    db.table('appointments').update(id, { status });
+  const handleUpdateStatus = async (id: string, status: Appointment['status']) => {
+    await db.table('appointments').update(id, { status });
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
   };
 
-  const handleUpdateConfig = (c: BusinessConfig) => {
+  const handleUpdateConfig = async (c: BusinessConfig) => {
     if (!user?.id) return;
-    db.table('business_config').updateWhere({ professional_id: user.id }, c);
+    await db.table('business_config').updateWhere({ professional_id: user.id }, c);
     setBusinessConfig(c);
   };
 
-  const handlePublicBooking = (slug: string) => {
+  const handlePublicBooking = async (slug: string) => {
     setIsLoading(true);
     const cleanSlug = generateSlug(slug);
-    const prof = db.table('professionals').find({ slug: cleanSlug });
+    const prof = await db.table('professionals').find({ slug: cleanSlug });
     if (prof) {
       setPublicProfessional(prof);
-      setPublicServices(db.table('services').where({ professional_id: prof.id, active: true }));
-      setPublicConfig(db.table('business_config').find({ professional_id: prof.id }) || { interval: 60, expediente: [] });
-      setPublicAppointments(db.table('appointments').where({ professional_id: prof.id }));
-      setPublicInactivations(db.table('blocked_dates').where({ professional_id: prof.id }));
+      const [svs, config, appts, blocks] = await Promise.all([
+        db.table('services').where({ professional_id: prof.id, active: true }),
+        db.table('business_config').find({ professional_id: prof.id }),
+        db.table('appointments').where({ professional_id: prof.id }),
+        db.table('blocked_dates').where({ professional_id: prof.id })
+      ]);
+      setPublicServices(svs);
+      setPublicConfig(config || { interval: 60, expediente: [] });
+      setPublicAppointments(appts);
+      setPublicInactivations(blocks);
       setIsPublicView(true);
       setCurrentView('booking');
     } else {
-      checkAuthSession();
+      await checkAuthSession();
     }
     setIsLoading(false);
   };
@@ -156,7 +170,14 @@ const App: React.FC = () => {
     navigate('landing');
   };
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><div className="w-12 h-12 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin"></div></div>;
+  if (isLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sincronizando com Supabase...</p>
+      </div>
+    </div>
+  );
 
   const renderViewContent = () => {
     if (isPublicView && publicProfessional) {
@@ -172,19 +193,19 @@ const App: React.FC = () => {
     const commonProps = { user, onLogout: handleLogout, navigate };
     
     switch (currentView) {
-      case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} />;
-      case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} onAddManualAppointment={handleSaveAppointment} inactivations={inactivations} />;
-      case 'services': return <ServicesPage {...commonProps} services={services} onAdd={(s) => { db.table('services').insert({ ...s, professional_id: user?.id }); fetchInitialData(user?.id!) }} onDelete={(id) => { db.table('services').delete(id); fetchInitialData(user?.id!) }} onToggle={(id) => { const s = services.find(sv => sv.id === id); db.table('services').update(id, { active: !s?.active }); fetchInitialData(user?.id!) }} />;
+      case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} config={businessConfig} />;
+      case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} onAddManualAppointment={handleSaveAppointment} inactivations={inactivations} config={businessConfig} />;
+      case 'services': return <ServicesPage {...commonProps} services={services} onAdd={async (s) => { await db.table('services').insert({ ...s, professional_id: user?.id }); await fetchInitialData(user?.id!) }} onDelete={async (id) => { await db.table('services').delete(id); await fetchInitialData(user?.id!) }} onToggle={async (id) => { const s = services.find(sv => sv.id === id); await db.table('services').update(id, { active: !s?.active }); await fetchInitialData(user?.id!) }} />;
       case 'clients': return <ClientsPage {...commonProps} clients={clients} appointments={appointments} />;
-      case 'company': return <ProfilePage {...commonProps} onUpdate={async (u) => { db.table('professionals').update(user?.id!, u); setUser(u); return true; }} />;
+      case 'company': return <ProfilePage {...commonProps} onUpdate={async (u) => { await db.table('professionals').update(user?.id!, u); setUser(u); return true; }} />;
       case 'settings': return <SettingsPage {...commonProps} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={handleUpdateConfig} />;
-      case 'finance': return <ReportsPage {...commonProps} appointments={appointments} services={services} />;
-      case 'professionals': return <ProfessionalsPage {...commonProps} professionals={professionals} onAdd={(p) => { db.table('professionals').insert(p); fetchInitialData(user?.id!) }} />;
-      case 'inactivation': return <InactivationPage {...commonProps} inactivations={inactivations} onAdd={async (d) => { db.table('blocked_dates').insert({...d, professional_id: user?.id}); fetchInitialData(user?.id!) }} onDelete={async (id) => { db.table('blocked_dates').delete(id); fetchInitialData(user?.id!) }} />;
+      case 'finance': return <ReportsPage {...commonProps} appointments={appointments} services={services} config={businessConfig} />;
+      case 'professionals': return <ProfessionalsPage {...commonProps} professionals={professionals} onAdd={async (p) => { await db.table('professionals').insert(p); await fetchInitialData(user?.id!) }} />;
+      case 'inactivation': return <InactivationPage {...commonProps} inactivations={inactivations} onAdd={async (d) => { await db.table('blocked_dates').insert({...d, professional_id: user?.id}); await fetchInitialData(user?.id!) }} onDelete={async (id) => { await db.table('blocked_dates').delete(id); await fetchInitialData(user?.id!) }} />;
       case 'recurring': return <RecurringPage {...commonProps} />;
       case 'apps': return <AppsPage {...commonProps} />;
-      case 'login': return <AuthView type="login" onAuth={() => fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('signup')} />;
-      case 'signup': return <AuthView type="signup" onAuth={() => fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('login')} />;
+      case 'login': return <AuthView type="login" onAuth={async () => await fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('signup')} />;
+      case 'signup': return <AuthView type="signup" onAuth={async () => await fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('login')} />;
       case 'landing': return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
       default: return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
     }

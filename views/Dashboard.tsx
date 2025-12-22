@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Professional, Appointment, Service, View } from '../types.ts';
+import { Professional, Appointment, Service, View, BusinessConfig } from '../types.ts';
 import { Icons } from '../constants.tsx';
 import { db } from '../services/db.ts';
 
@@ -11,14 +11,15 @@ interface DashboardProps {
   onUpdateStatus: (id: string, status: Appointment['status']) => void;
   onLogout: () => void;
   navigate: (v: View) => void;
+  config: BusinessConfig | null;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services = [], onUpdateStatus, navigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services = [], onUpdateStatus, navigate, config }) => {
   const [copyStatus, setCopyStatus] = useState(false);
   const todayStr = new Date().toISOString().split('T')[0];
   const todayAppts = (appointments || []).filter(a => a.date && a.date.startsWith(todayStr));
   
-  const config = user?.id ? db.table('business_config').find({ professional_id: user.id }) : null;
+  // Fix: Using config from props to avoid async call in component body which returned a Promise
   const brandColor = config?.themeColor || '#FF1493';
 
   const baseDomain = window.location.origin;
@@ -83,7 +84,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-10">
         <div className="xl:col-span-4 space-y-6">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-50">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
              <h3 className="text-[10px] font-black text-black uppercase tracking-widest mb-6 flex items-center gap-2"><Icons.Chart className="w-4 h-4" /> Caixa de Hoje</h3>
              <div className="grid grid-cols-2 gap-4">
                <div><p className="text-gray-400 text-[8px] font-black uppercase tracking-widest mb-1">Receita</p><p className="text-xl font-black text-black">R$ {todayRevenue.toLocaleString('pt-BR')}</p></div>
