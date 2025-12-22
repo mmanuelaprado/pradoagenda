@@ -8,20 +8,20 @@
     <!-- PWA Primary Meta Tags -->
     <meta name="theme-color" content="#ec4899">
     <meta name="description" content="Sistema profissional de agendamento online para especialistas em beleza.">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     
     <!-- Apple Mobile Web App Meta Tags (iOS Fullscreen) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Prado Agenda">
-    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     
     <!-- Android / Mobile Desktop Capability -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Prado Agenda">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -65,10 +65,13 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="index.tsx"></script>
     <script>
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/sw.js");
+        // Usando caminho relativo para garantir que o Service Worker seja registrado na mesma origem
+        navigator.serviceWorker.register("sw.js", { scope: "./" })
+          .then(reg => console.log("SW registrado com sucesso:", reg.scope))
+          .catch(err => console.error("Falha ao registrar SW:", err));
       }
     </script>
   </body>

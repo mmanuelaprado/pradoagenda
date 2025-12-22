@@ -3,7 +3,7 @@
   "rewrites": [
     { "source": "/manifest.json", "destination": "/public/manifest.json" },
     { "source": "/sw.js", "destination": "/public/sw.js" },
-    { "source": "/icons/:path*", "destination": "/public/icons/:path*" },
+    { "source": "/icons/(.*)", "destination": "/public/icons/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
