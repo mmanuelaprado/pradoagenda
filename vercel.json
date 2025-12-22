@@ -1,8 +1,6 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/manifest.json", "destination": "/public/manifest.json" },
-    { "source": "/sw.js", "destination": "/public/sw.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
