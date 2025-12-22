@@ -17,7 +17,13 @@ export const generateSlug = (text: string) => {
     .replace(/^-|-$/g, "");
 };
 
-// Interface unificada para persistência na nuvem
+const handleDbError = (error: any) => {
+  if (!error) return null;
+  // Extrai a mensagem de erro da forma mais robusta possível
+  const message = error.message || error.details || (typeof error === 'string' ? error : JSON.stringify(error));
+  throw new Error(message);
+};
+
 export const db = {
   auth: {
     getSession: () => {
@@ -42,7 +48,7 @@ export const db = {
         id,
         email: userData.email.toLowerCase(),
         name: userData.name,
-        businessName: userData.businessName,
+        business_name: userData.businessName,
         slug: generateSlug(userData.businessName),
       };
 
@@ -53,7 +59,7 @@ export const db = {
         await supabase.from('business_config').insert([{
           professional_id: data.id,
           interval: 60,
-          themeColor: '#FF1493',
+          theme_color: '#FF1493',
           expediente: [
             { day: 'segunda-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
             { day: 'terça-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
@@ -75,7 +81,8 @@ export const db = {
 
   table: (tableName: string) => ({
     all: async () => {
-      const { data } = await supabase.from(tableName).select('*');
+      const { data, error } = await supabase.from(tableName).select('*');
+      if (error) handleDbError(error);
       return data || [];
     },
     where: async (filters: Record<string, any>) => {
@@ -83,7 +90,8 @@ export const db = {
       Object.entries(filters).forEach(([key, val]) => {
         query = query.eq(key, val);
       });
-      const { data } = await query;
+      const { data, error } = await query;
+      if (error) handleDbError(error);
       return data || [];
     },
     find: async (filters: Record<string, any>) => {
@@ -91,25 +99,30 @@ export const db = {
       Object.entries(filters).forEach(([key, val]) => {
         query = query.eq(key, val);
       });
-      const { data } = await query.single();
+      const { data, error } = await query.maybeSingle();
+      if (error && error.code !== 'PGRST116') handleDbError(error);
       return data;
     },
     insert: async (item: any) => {
-      const { data } = await supabase.from(tableName).insert([item]).select().single();
+      const { data, error } = await supabase.from(tableName).insert([item]).select().single();
+      if (error) handleDbError(error);
       return data;
     },
     update: async (id: string, patch: any) => {
-      await supabase.from(tableName).update(patch).eq('id', id);
+      const { error } = await supabase.from(tableName).update(patch).eq('id', id);
+      if (error) handleDbError(error);
     },
     updateWhere: async (filters: Record<string, any>, patch: any) => {
       let query = supabase.from(tableName).update(patch);
       Object.entries(filters).forEach(([key, val]) => {
         query = query.eq(key, val);
       });
-      await query;
+      const { error } = await query;
+      if (error) handleDbError(error);
     },
     delete: async (id: string) => {
-      await supabase.from(tableName).delete().eq('id', id);
+      const { error } = await supabase.from(tableName).delete().eq('id', id);
+      if (error) handleDbError(error);
     }
   })
 };
