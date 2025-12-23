@@ -1,10 +1,3 @@
 {
-  "name": "Prado Agenda",
-  "short_name": "Agenda",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ec4899",
-  "description": "Sistema profissional de agendamento online.",
-  "icons": []
+  "comment": "Arquivo movido para public/manifest.json para ser a única fonte da verdade."
 }

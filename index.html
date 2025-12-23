@@ -8,12 +8,14 @@
     <!-- PWA Primary Meta Tags -->
     <meta name="theme-color" content="#ec4899">
     <meta name="description" content="Sistema profissional de agendamento online para especialistas em beleza.">
-    <link rel="manifest" href="manifest.json">
+    <!-- Link para o manifest centralizado na pasta public via rewrite -->
+    <link rel="manifest" href="/manifest.json">
     
-    <!-- Apple Mobile Web App Meta Tags (iOS Fullscreen) -->
+    <!-- Apple Mobile Web App Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Prado Agenda">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     
     <!-- Android / Mobile Desktop Capability -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -63,10 +65,12 @@
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
     <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("sw.js", { scope: "./" })
-          .then(reg => console.log("SW registrado na raiz:", reg.scope))
-          .catch(err => console.error("Erro SW:", err));
+      // Lógica de registro corrigida para evitar erro de origin mismatch no AI Studio
+      if (
+        "serviceWorker" in navigator &&
+        window.location.hostname !== "ai.studio"
+      ) {
+        navigator.serviceWorker.register("/sw.js");
       }
     </script>
   </body>
