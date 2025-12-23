@@ -54,46 +54,43 @@ const App: React.FC = () => {
     setUser(null);
     setIsPublicView(false);
     setDbError(null);
-    navigate('landing');
-  }, [navigate]);
+    setCurrentView('landing');
+  }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     const init = async () => {
-      // Pega o primeiro segmento da URL
-      const pathSegments = window.location.pathname.split('/').filter(Boolean);
-      const pathSlug = pathSegments[0];
-      
-      const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps', 'finance', 'marketing'];
-      
       try {
-        // Se houver um slug e não for uma rota protegida ou arquivo estático
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        const pathSlug = pathSegments[0];
+        const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps', 'finance', 'marketing'];
+        
         if (pathSlug && !protectedRoutes.includes(pathSlug.toLowerCase()) && !pathSlug.includes('.')) {
-          console.log("Detectado link público:", pathSlug);
           await handlePublicBooking(pathSlug);
         } else {
           await checkAuthSession();
         }
       } catch (err: any) {
-        console.error("Erro de inicialização:", err);
-        setDbError(err.message || "Erro ao conectar com o banco de dados.");
-        setIsLoading(false);
+        console.error("Erro crítico na inicialização:", err);
+        if (isMounted) setDbError(err.message || "Erro de conexão com o servidor.");
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
+
     init();
+    return () => { isMounted = false; };
   }, []);
 
   const checkAuthSession = async () => {
     const session = db.auth.getSession();
     if (session && session.user) {
       await fetchInitialData(session.user.id);
-    } else {
-      setIsLoading(false);
     }
   };
 
   const fetchInitialData = async (userId: string) => {
-    setIsLoading(true);
-    setDbError(null);
     try {
       const prof = await db.table('professionals').find({ id: userId });
       if (prof) {
@@ -113,9 +110,9 @@ const App: React.FC = () => {
           db.table('professionals').where({ business_name: normalizedProf.businessName })
         ]);
 
-        setServices(svs);
-        setAppointments(appts);
-        setClients(cls.map((c: any) => ({
+        setServices(svs || []);
+        setAppointments(appts || []);
+        setClients((cls || []).map((c: any) => ({
           ...c,
           totalBookings: c.total_bookings,
           lastVisit: c.last_visit
@@ -124,75 +121,24 @@ const App: React.FC = () => {
           ...config,
           themeColor: config.theme_color
         } : null);
-        setInactivations(blocks);
-        setProfessionals(pros);
-        if (['landing', 'login', 'signup'].includes(currentView)) navigate('dashboard');
+        setInactivations(blocks || []);
+        setProfessionals(pros || []);
+        
+        setCurrentView('dashboard');
       } else {
-        handleLogout();
+        db.auth.logout();
       }
     } catch (e: any) {
-      console.error("Erro ao sincronizar:", e);
-      setDbError(e.message || "Erro ao carregar dados.");
-    } finally {
-      setIsLoading(false);
+      console.error("Erro ao sincronizar dados do usuário:", e);
+      throw e;
     }
-  };
-
-  const handleSaveAppointment = async (appt: Omit<Appointment, 'id'>) => {
-    const profId = user?.id || publicProfessional?.id;
-    if (!profId) return;
-    
-    const client = await db.table('clients').find({ phone: appt.clientPhone, professional_id: profId });
-    if (client) {
-      await db.table('clients').update(client.id, { 
-        total_bookings: (client.total_bookings || 0) + 1, 
-        last_visit: new Date().toISOString() 
-      });
-    } else {
-      await db.table('clients').insert({ 
-        professional_id: profId, 
-        name: appt.clientName, 
-        phone: appt.clientPhone, 
-        total_bookings: 1, 
-        last_visit: new Date().toISOString() 
-      });
-    }
-    
-    await db.table('appointments').insert({ 
-      professional_id: profId,
-      service_id: appt.serviceId,
-      client_name: appt.clientName,
-      client_phone: appt.clientPhone,
-      date: appt.date,
-      status: appt.status
-    });
-    if (user?.id) fetchInitialData(user.id);
-  };
-
-  const handleUpdateStatus = async (id: string, status: Appointment['status']) => {
-    await db.table('appointments').update(id, { status });
-    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
-  };
-
-  const handleUpdateConfig = async (c: BusinessConfig) => {
-    if (!user?.id) return;
-    const dbPayload = {
-      interval: c.interval,
-      expediente: c.expediente,
-      theme_color: c.themeColor
-    };
-    await db.table('business_config').updateWhere({ professional_id: user.id }, dbPayload);
-    setBusinessConfig(c);
   };
 
   const handlePublicBooking = async (slug: string) => {
-    setIsLoading(true);
     const cleanSlug = generateSlug(slug);
     try {
-      // Busca pelo slug
       const prof = await db.table('professionals').find({ slug: cleanSlug });
       if (prof) {
-        // Normaliza o profissional (DB snake_case para TS camelCase)
         const normalizedProf = {
           ...prof,
           businessName: prof.business_name || prof.businessName || 'Espaço de Beleza',
@@ -207,21 +153,64 @@ const App: React.FC = () => {
           db.table('blocked_dates').where({ professional_id: prof.id })
         ]);
 
-        setPublicServices(svs);
+        setPublicServices(svs || []);
         setPublicConfig(config ? { ...config, themeColor: config.theme_color } : { interval: 60, expediente: [] });
-        setPublicAppointments(appts);
-        setPublicInactivations(blocks);
+        setPublicAppointments(appts || []);
+        setPublicInactivations(blocks || []);
         setIsPublicView(true);
         setCurrentView('booking');
       } else {
-        console.warn("Profissional não encontrado para o slug:", cleanSlug);
         await checkAuthSession();
       }
     } catch (err) {
-      console.error("Erro ao carregar página pública:", err);
+      console.error("Erro na página pública:", err);
       await checkAuthSession();
-    } finally {
-      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, status: Appointment['status']) => {
+    try {
+      await db.table('appointments').update(id, { status });
+      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    } catch (e) {
+      alert("Erro ao atualizar status.");
+    }
+  };
+
+  const handleSaveAppointment = async (appt: Omit<Appointment, 'id'>) => {
+    const profId = user?.id || publicProfessional?.id;
+    if (!profId) return;
+    
+    try {
+      const client = await db.table('clients').find({ phone: appt.clientPhone, professional_id: profId });
+      if (client) {
+        await db.table('clients').update(client.id, { 
+          total_bookings: (client.total_bookings || 0) + 1, 
+          last_visit: new Date().toISOString() 
+        });
+      } else {
+        await db.table('clients').insert({ 
+          professional_id: profId, 
+          name: appt.clientName, 
+          phone: appt.clientPhone, 
+          total_bookings: 1, 
+          last_visit: new Date().toISOString() 
+        });
+      }
+      
+      await db.table('appointments').insert({ 
+        professional_id: profId,
+        service_id: appt.serviceId,
+        client_name: appt.clientName,
+        client_phone: appt.clientPhone,
+        date: appt.date,
+        status: appt.status
+      });
+      
+      if (user?.id) fetchInitialData(user.id);
+    } catch (e) {
+      console.error("Erro ao salvar agendamento:", e);
+      alert("Houve um erro ao salvar seu agendamento. Tente novamente.");
     }
   };
 
@@ -232,31 +221,21 @@ const App: React.FC = () => {
           <Icons.Ban className="w-8 h-8" />
         </div>
         <h2 className="text-xl font-black text-black uppercase mb-4 tracking-tight">Erro de Sistema</h2>
-        <div className="bg-gray-50 p-4 rounded-xl mb-8 overflow-hidden">
-          <p className="text-gray-500 text-xs font-mono break-all">{dbError}</p>
-        </div>
+        <p className="text-gray-500 text-sm mb-8">{dbError}</p>
         <button 
-          onClick={() => { setDbError(null); setIsLoading(true); window.location.reload(); }} 
-          className="w-full bg-[#FF1493] text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg hover:bg-pink-700 transition-all mb-4"
+          onClick={() => window.location.reload()} 
+          className="w-full bg-[#FF1493] text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg hover:bg-pink-700 transition-all"
         >
-          Recarregar Sistema
-        </button>
-        <button 
-          onClick={handleLogout}
-          className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-gray-200 transition-all"
-        >
-          Sair da Conta
+          Tentar Novamente
         </button>
       </div>
     </div>
   );
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Prado Agenda: Sincronizando...</p>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+      <div className="w-10 h-10 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Carregando Prado Agenda...</p>
     </div>
   );
 
@@ -271,25 +250,20 @@ const App: React.FC = () => {
       );
     }
     
-    const commonProps = { user, onLogout: handleLogout, navigate };
+    const props = { user, onLogout: handleLogout, navigate };
     
     switch (currentView) {
-      case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} config={businessConfig} />;
-      case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} onAddManualAppointment={handleSaveAppointment} inactivations={inactivations} config={businessConfig} />;
-      case 'services': return <ServicesPage {...commonProps} services={services} onAdd={async (s) => { await db.table('services').insert({ ...s, professional_id: user?.id }); await fetchInitialData(user?.id!) }} onDelete={async (id) => { await db.table('services').delete(id); await fetchInitialData(user?.id!) }} onToggle={async (id) => { const s = services.find(sv => sv.id === id); await db.table('services').update(id, { active: !s?.active }); await fetchInitialData(user?.id!) }} />;
-      case 'clients': return <ClientsPage {...commonProps} clients={clients} appointments={appointments} />;
-      case 'company': return <ProfilePage {...commonProps} onUpdate={async (u) => { await db.table('professionals').update(user?.id!, { ...u, business_name: u.businessName }); await fetchInitialData(user?.id!); return true; }} />;
-      case 'settings': return <SettingsPage {...commonProps} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={handleUpdateConfig} />;
-      case 'finance': return <ReportsPage {...commonProps} appointments={appointments} services={services} config={businessConfig} />;
-      case 'marketing': return <MarketingPage {...commonProps} services={services} />;
-      case 'professionals': return <ProfessionalsPage {...commonProps} professionals={professionals} onAdd={async (p) => { await db.table('professionals').insert(p); await fetchInitialData(user?.id!) }} />;
-      case 'inactivation': return <InactivationPage {...commonProps} inactivations={inactivations} onAdd={async (d) => { await db.table('blocked_dates').insert({...d, professional_id: user?.id}); await fetchInitialData(user?.id!) }} onDelete={async (id) => { await db.table('blocked_dates').delete(id); await fetchInitialData(user?.id!) }} />;
-      case 'recurring': return <RecurringPage {...commonProps} />;
-      case 'apps': return <AppsPage {...commonProps} />;
-      case 'login': return <AuthView type="login" onAuth={async () => await fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('signup')} />;
-      case 'signup': return <AuthView type="signup" onAuth={async () => await fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('login')} />;
-      case 'landing': return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
-      default: return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
+      case 'dashboard': return <Dashboard {...props} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} config={businessConfig} />;
+      case 'agenda': return <AgendaPage {...props} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} onAddManualAppointment={handleSaveAppointment} inactivations={inactivations} config={businessConfig} />;
+      case 'services': return <ServicesPage {...props} services={services} onAdd={async (s) => { await db.table('services').insert({ ...s, professional_id: user?.id }); fetchInitialData(user?.id!) }} onDelete={async (id) => { await db.table('services').delete(id); fetchInitialData(user?.id!) }} onToggle={async (id) => { const s = services.find(sv => sv.id === id); await db.table('services').update(id, { active: !s?.active }); fetchInitialData(user?.id!) }} />;
+      case 'clients': return <ClientsPage {...props} clients={clients} appointments={appointments} />;
+      case 'company': return <ProfilePage {...props} onUpdate={async (u) => { await db.table('professionals').update(user?.id!, { ...u, business_name: u.businessName }); fetchInitialData(user?.id!); return true; }} />;
+      case 'settings': return <SettingsPage {...props} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={async (c) => { await db.table('business_config').updateWhere({ professional_id: user?.id }, { interval: c.interval, expediente: c.expediente, theme_color: c.themeColor }); setBusinessConfig(c); }} />;
+      case 'finance': return <ReportsPage {...props} appointments={appointments} services={services} config={businessConfig} />;
+      case 'marketing': return <MarketingPage {...props} services={services} />;
+      case 'login': return <AuthView type="login" onAuth={() => fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('signup')} />;
+      case 'signup': return <AuthView type="signup" onAuth={() => fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('login')} />;
+      case 'landing': default: return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
     }
   };
 
@@ -301,7 +275,7 @@ const App: React.FC = () => {
         <div className="flex-grow pb-20 md:pb-12 overflow-y-auto custom-scrollbar">
           {renderViewContent()}
         </div>
-        {user && !isPublicView && <BottomNav activeView={currentView} navigate={navigate} />}
+        {user && !isPublicView && <BottomNav activeView={currentView as View} navigate={navigate} />}
       </div>
     </div>
   );

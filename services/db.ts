@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Conexão oficial com o projeto Supabase fornecido pelo usuário
 const SUPABASE_URL = 'https://acpyjpbkigjnizvsbdoi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_5IUT2-3ML9WkM5BFcV_8Sg_x-N0BmHp';
 
@@ -20,6 +19,7 @@ export const generateSlug = (text: string) => {
 const handleDbError = (error: any) => {
   if (!error) return null;
   const message = error.message || error.details || (typeof error === 'string' ? error : JSON.stringify(error));
+  console.error("Database Error:", message);
   throw new Error(message);
 };
 
@@ -28,8 +28,12 @@ export const db = {
     getSession: () => {
       try {
         const session = localStorage.getItem('supabase.auth.token');
-        return session ? JSON.parse(session) : null;
+        if (!session) return null;
+        const parsed = JSON.parse(session);
+        if (parsed?.user?.id) return parsed;
+        return null;
       } catch (e) {
+        localStorage.removeItem('supabase.auth.token');
         return null;
       }
     },
@@ -58,7 +62,6 @@ export const db = {
       const { data, error } = await supabase.from('professionals').insert([newUser]).select().single();
       
       if (data) {
-        // Inicializa configuração padrão de negócio
         await supabase.from('business_config').insert([{
           professional_id: data.id,
           interval: 60,
