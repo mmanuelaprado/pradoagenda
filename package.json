@@ -1,5 +1,6 @@
 {
   "name": "prado-agenda-vanilla",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "description": "Sistema de agendamento online Pure HTML/JS"
 }

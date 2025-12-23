@@ -5,17 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Prado Agenda - Gestão de Beleza</title>
     
-    <!-- Estilos -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     
     <style>
-      body { font-family: 'Poppins', sans-serif; background-color: #f9fafb; margin: 0; padding: 0; overflow-x: hidden; }
+      body { 
+        font-family: 'Poppins', sans-serif; 
+        background-color: #f9fafb; 
+        margin: 0; 
+        padding: 0; 
+        overflow-x: hidden; 
+      }
       #root { min-height: 100vh; display: flex; flex-direction: column; }
       .animate-fade { animation: fadeIn 0.3s ease-out; }
       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #FF1493; border-radius: 10px; }
+      
+      /* Scrollbar Customizada */
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #FF1493; border-radius: 10px; }
     </style>
   <script type="importmap">
 {
@@ -34,7 +45,7 @@
   <body>
     <div id="root"></div>
 
-    <!-- Script Principal (Pasta /assets conforme solicitado) -->
+    <!-- Script Principal (Pure JS) -->
     <script type="module" src="/assets/index.js"></script>
   </body>
 </html>
