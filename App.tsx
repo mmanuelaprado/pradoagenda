@@ -59,11 +59,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
-      const pathSlug = window.location.pathname.split('/').filter(Boolean)[0];
+      // Pega o primeiro segmento da URL
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const pathSlug = pathSegments[0];
+      
       const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps', 'finance', 'marketing'];
       
       try {
-        if (pathSlug && !protectedRoutes.includes(pathSlug) && !pathSlug.includes('.')) {
+        // Se houver um slug e não for uma rota protegida ou arquivo estático
+        if (pathSlug && !protectedRoutes.includes(pathSlug.toLowerCase()) && !pathSlug.includes('.')) {
+          console.log("Detectado link público:", pathSlug);
           await handlePublicBooking(pathSlug);
         } else {
           await checkAuthSession();
@@ -94,7 +99,8 @@ const App: React.FC = () => {
       if (prof) {
         const normalizedProf = {
           ...prof,
-          businessName: prof.business_name || prof.businessName
+          businessName: prof.business_name || prof.businessName || 'Meu Espaço',
+          id: prof.id
         };
         setUser(normalizedProf);
 
@@ -182,25 +188,41 @@ const App: React.FC = () => {
   const handlePublicBooking = async (slug: string) => {
     setIsLoading(true);
     const cleanSlug = generateSlug(slug);
-    const prof = await db.table('professionals').find({ slug: cleanSlug });
-    if (prof) {
-      setPublicProfessional(prof);
-      const [svs, config, appts, blocks] = await Promise.all([
-        db.table('services').where({ professional_id: prof.id, active: true }),
-        db.table('business_config').find({ professional_id: prof.id }),
-        db.table('appointments').where({ professional_id: prof.id }),
-        db.table('blocked_dates').where({ professional_id: prof.id })
-      ]);
-      setPublicServices(svs);
-      setPublicConfig(config ? { ...config, themeColor: config.theme_color } : { interval: 60, expediente: [] });
-      setPublicAppointments(appts);
-      setPublicInactivations(blocks);
-      setIsPublicView(true);
-      setCurrentView('booking');
-    } else {
+    try {
+      // Busca pelo slug
+      const prof = await db.table('professionals').find({ slug: cleanSlug });
+      if (prof) {
+        // Normaliza o profissional (DB snake_case para TS camelCase)
+        const normalizedProf = {
+          ...prof,
+          businessName: prof.business_name || prof.businessName || 'Espaço de Beleza',
+          id: prof.id
+        };
+        setPublicProfessional(normalizedProf);
+
+        const [svs, config, appts, blocks] = await Promise.all([
+          db.table('services').where({ professional_id: prof.id, active: true }),
+          db.table('business_config').find({ professional_id: prof.id }),
+          db.table('appointments').where({ professional_id: prof.id }),
+          db.table('blocked_dates').where({ professional_id: prof.id })
+        ]);
+
+        setPublicServices(svs);
+        setPublicConfig(config ? { ...config, themeColor: config.theme_color } : { interval: 60, expediente: [] });
+        setPublicAppointments(appts);
+        setPublicInactivations(blocks);
+        setIsPublicView(true);
+        setCurrentView('booking');
+      } else {
+        console.warn("Profissional não encontrado para o slug:", cleanSlug);
+        await checkAuthSession();
+      }
+    } catch (err) {
+      console.error("Erro ao carregar página pública:", err);
       await checkAuthSession();
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   if (dbError) return (

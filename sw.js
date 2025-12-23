@@ -31,15 +31,24 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  if (url.origin === self.location.origin && event.request.method === 'GET') {
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        return response || fetch(event.request).catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-        });
-      })
-    );
-  }
+  
+  // Apenas lida com GET
+  if (event.request.method !== 'GET') return;
+
+  // Ignora chamadas externas (como Supabase) para o cache de navegação
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // Se estiver no cache, retorna. Senão, busca na rede.
+      return response || fetch(event.request).then(netResponse => {
+        return netResponse;
+      }).catch(() => {
+        // Se a navegação falhar (offline), serve o index.html como fallback para SPA
+        if (event.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+      });
+    })
+  );
 });

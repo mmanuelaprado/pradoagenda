@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Conexão oficial com o projeto Supabase fornecido pelo usuário
@@ -8,6 +7,7 @@ const SUPABASE_KEY = 'sb_publishable_5IUT2-3ML9WkM5BFcV_8Sg_x-N0BmHp';
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export const generateSlug = (text: string) => {
+  if (!text) return "";
   return text
     .toLowerCase()
     .normalize("NFD")
@@ -19,7 +19,6 @@ export const generateSlug = (text: string) => {
 
 const handleDbError = (error: any) => {
   if (!error) return null;
-  // Extrai a mensagem de erro da forma mais robusta possível
   const message = error.message || error.details || (typeof error === 'string' ? error : JSON.stringify(error));
   throw new Error(message);
 };
@@ -27,11 +26,14 @@ const handleDbError = (error: any) => {
 export const db = {
   auth: {
     getSession: () => {
-      const session = localStorage.getItem('supabase.auth.token');
-      return session ? JSON.parse(session) : null;
+      try {
+        const session = localStorage.getItem('supabase.auth.token');
+        return session ? JSON.parse(session) : null;
+      } catch (e) {
+        return null;
+      }
     },
     login: async (email: string) => {
-      // Usamos maybeSingle para não disparar erro caso não encontre nada
       const { data, error } = await supabase
         .from('professionals')
         .select('*')
@@ -56,7 +58,7 @@ export const db = {
       const { data, error } = await supabase.from('professionals').insert([newUser]).select().single();
       
       if (data) {
-        // Inicializa configuração padrão de negócio no Supabase
+        // Inicializa configuração padrão de negócio
         await supabase.from('business_config').insert([{
           professional_id: data.id,
           interval: 60,
