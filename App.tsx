@@ -113,21 +113,30 @@ const App: React.FC = () => {
         ]);
 
         setServices(svs);
-        setAppointments(appts);
+        
+        // Normalização de agendamentos
+        setAppointments(appts.map((a: any) => ({
+          ...a,
+          clientName: a.client_name || a.clientName,
+          clientPhone: a.client_phone || a.clientPhone,
+          serviceId: a.service_id || a.serviceId
+        })));
+
         setClients(cls.map((c: any) => ({
           ...c,
           totalBookings: c.total_bookings,
           lastVisit: c.last_visit
         })));
+
         setBusinessConfig(config ? {
           ...config,
           themeColor: config.theme_color
         } : null);
+
         setInactivations(blocks);
         setProfessionals(pros);
         if (['landing', 'login', 'signup'].includes(currentView)) navigate('dashboard');
       } else {
-        // Se a sessão existe no localstorage mas o usuário não está no DB (limpeza de DB), desloga.
         handleLogout();
       }
     } catch (e: any) {
@@ -171,7 +180,10 @@ const App: React.FC = () => {
       date: appt.date,
       status: appt.status
     });
-    if (user?.id) fetchInitialData(user.id);
+
+    if (user?.id) {
+      await fetchInitialData(user.id);
+    }
   };
 
   const handleUpdateStatus = async (id: string, status: Appointment['status']) => {
@@ -204,7 +216,15 @@ const App: React.FC = () => {
       ]);
       setPublicServices(svs);
       setPublicConfig(config ? { ...config, themeColor: config.theme_color } : { interval: 60, expediente: [] });
-      setPublicAppointments(appts);
+      
+      // Normalização de agendamentos para visualização pública (essencial para cálculo de disponibilidade)
+      setPublicAppointments(appts.map((a: any) => ({
+        ...a,
+        clientName: a.client_name || a.clientName,
+        clientPhone: a.client_phone || a.clientPhone,
+        serviceId: a.service_id || a.serviceId
+      })));
+
       setPublicInactivations(blocks);
       setIsPublicView(true);
       setCurrentView('booking');
