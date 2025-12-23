@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
@@ -15,39 +14,39 @@ root.render(
   </React.StrictMode>
 );
 
-// Registro robusto do Service Worker para PWA (Google Play / Android)
+// Registro robusto do Service Worker para PWA
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const swPath = './sw.js';
-    navigator.serviceWorker
-      .register(swPath)
-      .then((registration) => {
-        console.log('PWA: Service Worker registrado com escopo:', registration.scope);
-        
-        // Verifica atualizações do SW
-        registration.onupdatefound = () => {
-          const installingWorker = registration.installing;
-          if (installingWorker) {
-            installingWorker.onstatechange = () => {
-              if (installingWorker.state === 'installed') {
-                if (navigator.serviceWorker.controller) {
-                  console.log('PWA: Nova versão disponível! Por favor, recarregue.');
-                } else {
-                  console.log('PWA: Conteúdo cacheado para uso offline.');
-                }
-              }
-            };
+  const registerSW = () => {
+    // Adicionamos um pequeno atraso (1s) para garantir que o navegador 
+    // terminou de processar o estado do documento, evitando o "InvalidStateError"
+    setTimeout(() => {
+      const swUrl = `${window.location.origin}/sw.js`;
+      
+      navigator.serviceWorker
+        .register(swUrl)
+        .then((registration) => {
+          console.log('PWA: Service Worker registrado:', registration.scope);
+        })
+        .catch((error) => {
+          // Tratamento amigável para ambientes de preview onde o SW pode ser bloqueado
+          if (error.name === 'InvalidStateError' || error.message.includes('invalid state')) {
+            console.warn('PWA: Registro ignorado (documento em transição ou ambiente restrito).');
+          } else if (window.location.hostname.includes('usercontent.goog') || window.location.hostname.includes('localhost')) {
+            console.warn('PWA: Registro falhou no ambiente de desenvolvimento:', error.message);
+          } else {
+            console.error('PWA: Erro no registro do Service Worker:', error);
           }
-        };
-      })
-      .catch((error) => {
-        console.error('PWA: Erro no registro do Service Worker:', error);
-      });
-  });
+        });
+    }, 1000);
+  };
+
+  if (document.readyState === 'complete') {
+    registerSW();
+  } else {
+    window.addEventListener('load', registerSW);
+  }
 }
 
-// Escuta evento de instalação (Prompt)
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Opcional: Salvar o evento para disparar o prompt em um botão personalizado
   console.log('PWA: Aplicativo pronto para instalação.');
 });
