@@ -4,10 +4,6 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/(css|js|img|assets|icon-.*|manifest.json|sw.js)/(.*)",
-      "destination": "/$1/$2"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

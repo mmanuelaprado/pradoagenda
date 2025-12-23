@@ -27,7 +27,6 @@
       }
       #root { min-height: 100vh; display: flex; flex-direction: column; }
       
-      /* Preloader simples para evitar tela branca enquanto o JS carrega */
       .initial-loader {
         position: fixed;
         inset: 0;
@@ -39,35 +38,22 @@
         z-index: 9999;
         transition: opacity 0.5s;
       }
+      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
     <script>
-      // Polyfills essenciais
       window.process = { env: { API_KEY: "" } };
       window.global = window;
-      
-      // Tratamento de erro fatal
-      window.onerror = function(msg, url, line) {
-        console.error("Erro Global:", msg, "em", url, ":", line);
-        const loader = document.querySelector('.initial-loader');
-        if (loader) {
-          loader.innerHTML = `<div style="padding: 20px; text-align: center;">
-            <h2 style="color: #FF1493;">Erro ao carregar</h2>
-            <p style="font-size: 12px; color: #666;">${msg}</p>
-            <button onclick="location.reload()" style="background: #FF1493; color: white; border: none; padding: 10px 20px; border-radius: 10px; margin-top: 10px;">Recarregar</button>
-          </div>`;
-        }
-      };
     </script>
   <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.89.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "vite": "https://esm.sh/vite@^7.3.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.89.0",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
@@ -80,19 +66,18 @@
 
     <div id="root"></div>
 
+    <!-- O Vite transformará este arquivo .tsx em .js durante o build -->
     <script type="module" src="/index.tsx"></script>
 
-    <style>
-      @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
     <script>
-      // Remove o loader assim que o React montar (será chamado no useEffect do App ou aqui via timeout de segurança)
       window.addEventListener('load', () => {
         setTimeout(() => {
           const loader = document.getElementById('preloader');
-          if (loader) loader.style.opacity = '0';
-          setTimeout(() => loader?.remove(), 500);
-        }, 2000);
+          if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 500);
+          }
+        }, 1500);
       });
     </script>
   </body>
