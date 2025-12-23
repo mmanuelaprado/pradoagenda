@@ -3,49 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Prado Agenda - Gestão Profissional de Agendamentos</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#ec4899">
-    <meta name="description" content="Sistema profissional de agendamento online para especialistas em beleza.">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Prado Agenda">
-    
+    <title>Prado Agenda - Gestão Profissional</title>
+
+    <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
-    
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#ec4899" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-      :root {
-        --safe-area-inset-top: env(safe-area-inset-top, 0px);
-        --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-      }
       body {
         font-family: 'Poppins', sans-serif;
-        background-color: #f9fafb;
+        background-color: #ffffff;
         margin: 0;
         padding: 0;
       }
       #root { min-height: 100vh; display: flex; flex-direction: column; }
-      
-      .initial-loader {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        z-index: 9999;
-        transition: opacity 0.5s;
-      }
-      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
-    <script>
-      window.process = { env: { API_KEY: "" } };
-      window.global = window;
-    </script>
   <script type="importmap">
 {
   "imports": {
@@ -60,27 +36,9 @@
 }
 </script>
 </head>
-  <body>
-    <div class="initial-loader" id="preloader">
-      <div style="width: 40px; height: 40px; border: 4px solid #FF1493; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-      <p style="margin-top: 15px; font-weight: 800; font-size: 10px; color: #ddd; text-transform: uppercase; letter-spacing: 2px;">Prado Agenda</p>
-    </div>
-
+  <body class="bg-white">
     <div id="root"></div>
-
-    <!-- Caminho absoluto para o arquivo de entrada TSX. O Vite cuidará da transpilação no build -->
+    <!-- O Vite processa este arquivo durante o build e o transforma em /assets/index.js -->
     <script type="module" src="/index.tsx"></script>
-
-    <script>
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const loader = document.getElementById('preloader');
-          if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.remove(), 500);
-          }
-        }, 1000);
-      });
-    </script>
   </body>
 </html>
