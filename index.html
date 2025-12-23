@@ -12,6 +12,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Prado Agenda">
     
+    <link rel="manifest" href="/manifest.json" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -66,7 +68,7 @@
 
     <div id="root"></div>
 
-    <!-- O Vite gerencia o carregamento deste arquivo TSX -->
+    <!-- Caminho absoluto para o arquivo de entrada TSX. O Vite cuidará da transpilação no build -->
     <script type="module" src="/index.tsx"></script>
 
     <script>
@@ -77,7 +79,7 @@
             loader.style.opacity = '0';
             setTimeout(() => loader.remove(), 500);
           }
-        }, 800);
+        }, 1000);
       });
     </script>
   </body>
