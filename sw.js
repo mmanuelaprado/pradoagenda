@@ -1,31 +1,32 @@
 
-const CACHE_NAME = 'prado-agenda-v2';
+const CACHE_NAME = 'prado-agenda-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon/favicon.png'
+  '/favicon/favicon.png',
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'
 ];
 
-// Instalação: Cacheia os recursos básicos
+// Instalação: Salva assets vitais
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Cache aberto');
+      console.log('PWA SW: Armazenando recursos principais');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
-// Ativação: Limpa caches antigos
+// Ativação: Limpeza de versões anteriores
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Removendo cache antigo:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -35,32 +36,37 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Interceptação de requisições: Stale-While-Revalidate
+// Fetch: Estratégia Stale-While-Revalidate (Carrega rápido do cache, atualiza em background)
 self.addEventListener('fetch', (event) => {
-  // Ignorar requisições do Supabase ou de outros domínios para cache agressivo
-  // Manter cache apenas para arquivos locais da aplicação
-  const url = new URL(event.request.url);
-  const isLocal = url.origin === self.location.origin;
-
-  if (event.request.method !== 'GET') return;
+  // Ignorar chamadas de API do Supabase (dinâmicas)
+  if (event.request.url.includes('supabase.co')) return;
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Se a requisição for local e bem sucedida, atualiza o cache
-        if (isLocal && networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // Em caso de falha de rede (offline)
+      if (cachedResponse) {
+        // Busca atualização em background
+        fetch(event.request).then((networkResponse) => {
+          if (networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse);
+            });
+          }
+        }).catch(() => {});
+        
         return cachedResponse;
-      });
+      }
 
-      return cachedResponse || fetchPromise;
+      return fetch(event.request).then((response) => {
+        // Cacheia novas páginas/recursos estáticos
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+        return response;
+      });
     })
   );
 });

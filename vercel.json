@@ -1,9 +1,12 @@
+
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/((?!assets/|favicon/|.*\\.).*)",
-      "destination": "/index.html"
-    }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/manifest.json", "dest": "/manifest.json" },
+    { "src": "/sw.js", "dest": "/sw.js" },
+    { "src": "/favicon/(.*)", "dest": "/favicon/$1" },
+    { "src": "/icon-192.png", "dest": "/favicon/favicon.png" },
+    { "src": "/icon-512.png", "dest": "/favicon/favicon.png" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
