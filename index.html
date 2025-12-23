@@ -14,8 +14,21 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/favicon/favicon.png">
     
+    <!-- Tailwind Engine - Essencial para o design -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: '#FF1493',
+            }
+          }
+        }
+      }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
       :root {
@@ -33,12 +46,26 @@
       #root {
         min-height: 100vh;
       }
-      .animate-fade-in {
-        animation: fadeIn 0.5s ease-out forwards;
+      .initial-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        width: 100%;
+        background: white;
       }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+      .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #FF1493;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     </style>
   <script type="importmap">
@@ -56,7 +83,12 @@
 </script>
 </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="initial-loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; font-weight: 800; color: #FF1493; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;">Carregando Prado Agenda...</p>
+      </div>
+    </div>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
