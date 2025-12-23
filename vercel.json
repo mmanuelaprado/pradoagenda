@@ -2,7 +2,15 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/(index.tsx|App.tsx|types.ts|constants.tsx|Sidebar.tsx|sw.js|manifest.json|icon-.*)",
+      "destination": "/$1"
+    },
+    {
+      "source": "/(services|views|components)/(.*)",
+      "destination": "/$1/$2"
+    },
+    {
+      "source": "/((?!api/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
