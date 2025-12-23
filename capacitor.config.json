@@ -1,10 +1,9 @@
-
 {
   "appId": "com.pradoagenda.app",
   "appName": "Prado Agenda",
   "webDir": "dist",
-  "bundledWebRuntime": false,
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "cleartext": true
   }
 }

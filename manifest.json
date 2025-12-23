@@ -1,3 +1,24 @@
 {
-  "comment": "Arquivo movido para public/manifest.json para ser a única fonte da verdade."
+  "name": "Prado Agenda",
+  "short_name": "Agenda",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ec4899",
+  "description": "Sistema profissional de agendamento online para especialistas em beleza.",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
