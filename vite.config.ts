@@ -1,1 +1,1 @@
-// Arquivo desativado - Projeto convertido para Pure HTML/JS
+// Arquivo desativado - Projeto convertido para Vanilla JS
