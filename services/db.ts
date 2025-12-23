@@ -1,13 +1,13 @@
+
 import { createClient } from '@supabase/supabase-js';
 
+// Conexão oficial com o projeto Supabase fornecido pelo usuário
 const SUPABASE_URL = 'https://acpyjpbkigjnizvsbdoi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_5IUT2-3ML9WkM5BFcV_8Sg_x-N0BmHp';
 
-// Inicialização segura do cliente Supabase
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export const generateSlug = (text: string) => {
-  if (!text) return "";
   return text
     .toLowerCase()
     .normalize("NFD")
@@ -19,26 +19,19 @@ export const generateSlug = (text: string) => {
 
 const handleDbError = (error: any) => {
   if (!error) return null;
+  // Extrai a mensagem de erro da forma mais robusta possível
   const message = error.message || error.details || (typeof error === 'string' ? error : JSON.stringify(error));
-  console.error("Database Error:", message);
   throw new Error(message);
 };
 
 export const db = {
   auth: {
     getSession: () => {
-      try {
-        const session = localStorage.getItem('supabase.auth.token');
-        if (!session) return null;
-        const parsed = JSON.parse(session);
-        if (parsed?.user?.id) return parsed;
-        return null;
-      } catch (e) {
-        localStorage.removeItem('supabase.auth.token');
-        return null;
-      }
+      const session = localStorage.getItem('supabase.auth.token');
+      return session ? JSON.parse(session) : null;
     },
     login: async (email: string) => {
+      // Usamos maybeSingle para não disparar erro caso não encontre nada
       const { data, error } = await supabase
         .from('professionals')
         .select('*')
@@ -63,24 +56,21 @@ export const db = {
       const { data, error } = await supabase.from('professionals').insert([newUser]).select().single();
       
       if (data) {
-        // Tenta criar configuração padrão mas não trava se falhar
-        try {
-          await supabase.from('business_config').insert([{
-            professional_id: data.id,
-            interval: 60,
-            theme_color: '#FF1493',
-            expediente: [
-              { day: 'segunda-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-              { day: 'terça-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-              { day: 'quarta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-              { day: 'quinta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-              { day: 'sexta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
-              { day: 'sábado', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: false}] },
-              { day: 'domingo', active: false, shifts: [{start: '09:00', end: '12:00', active: false}, {start: '13:00', end: '18:00', active: false}] }
-            ]
-          }]);
-        } catch (e) { console.warn("Erro ao criar config padrão."); }
-        
+        // Inicializa configuração padrão de negócio no Supabase
+        await supabase.from('business_config').insert([{
+          professional_id: data.id,
+          interval: 60,
+          theme_color: '#FF1493',
+          expediente: [
+            { day: 'segunda-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'terça-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'quarta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'quinta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'sexta-feira', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: true}] },
+            { day: 'sábado', active: true, shifts: [{start: '09:00', end: '12:00', active: true}, {start: '13:00', end: '18:00', active: false}] },
+            { day: 'domingo', active: false, shifts: [{start: '09:00', end: '12:00', active: false}, {start: '13:00', end: '18:00', active: false}] }
+          ]
+        }]);
         localStorage.setItem('supabase.auth.token', JSON.stringify({ user: data }));
       }
       return { data, error };

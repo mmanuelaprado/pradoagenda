@@ -1,20 +1,20 @@
+
 import React from 'react';
 import { Icons } from './constants.tsx';
 import { View } from './types.ts';
 
 interface SidebarProps {
-  activeView: string;
-  navigate: (v: any) => void;
+  activeView: View;
+  navigate: (v: View) => void;
   onLogout: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => {
-  const menuItems: { view: string; icon: React.FC; label: string }[] = [
+  const menuItems: { view: View; icon: React.FC; label: string }[] = [
     { view: 'dashboard', icon: Icons.Home, label: 'Início' },
     { view: 'agenda', icon: Icons.Calendar, label: 'Agenda' },
     { view: 'clients', icon: Icons.Users, label: 'Clientes' },
     { view: 'services', icon: Icons.Scissors, label: 'Serviços' },
-    { view: 'marketing', icon: Icons.Brain, label: 'Marketing IA' },
     { view: 'professionals', icon: Icons.Users, label: 'Profissionais' },
     { view: 'finance', icon: Icons.Finance, label: 'Financeiro' },
     { view: 'recurring', icon: Icons.Repeat, label: 'Agendamento recorrente' },

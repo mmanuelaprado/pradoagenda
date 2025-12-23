@@ -1,9 +1,0 @@
-{
-  "name": "PradoAgenda",
-  "short_name": "PradoAgenda",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ec4899",
-  "icons": []
-}
