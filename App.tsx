@@ -73,7 +73,7 @@ const App: React.FC = () => {
         }
       } catch (err: any) {
         console.error("Erro crítico na inicialização:", err);
-        if (isMounted) setDbError(err.message || "Erro de conexão com o servidor.");
+        if (isMounted) setDbError(err.message || "Erro de conexão com o banco de dados. Verifique sua conexão.");
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -84,9 +84,14 @@ const App: React.FC = () => {
   }, []);
 
   const checkAuthSession = async () => {
-    const session = db.auth.getSession();
-    if (session && session.user) {
-      await fetchInitialData(session.user.id);
+    try {
+      const session = db.auth.getSession();
+      if (session && session.user) {
+        await fetchInitialData(session.user.id);
+      }
+    } catch (e) {
+      console.warn("Sessão inválida ou expirada.");
+      db.auth.logout();
     }
   };
 
@@ -173,7 +178,7 @@ const App: React.FC = () => {
       await db.table('appointments').update(id, { status });
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     } catch (e) {
-      alert("Erro ao atualizar status.");
+      console.error("Erro ao atualizar status.");
     }
   };
 
@@ -210,7 +215,7 @@ const App: React.FC = () => {
       if (user?.id) fetchInitialData(user.id);
     } catch (e) {
       console.error("Erro ao salvar agendamento:", e);
-      alert("Houve um erro ao salvar seu agendamento. Tente novamente.");
+      alert("Houve um erro ao salvar o agendamento. Tente novamente.");
     }
   };
 
@@ -261,6 +266,10 @@ const App: React.FC = () => {
       case 'settings': return <SettingsPage {...props} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={async (c) => { await db.table('business_config').updateWhere({ professional_id: user?.id }, { interval: c.interval, expediente: c.expediente, theme_color: c.themeColor }); setBusinessConfig(c); }} />;
       case 'finance': return <ReportsPage {...props} appointments={appointments} services={services} config={businessConfig} />;
       case 'marketing': return <MarketingPage {...props} services={services} />;
+      case 'professionals': return <ProfessionalsPage {...props} professionals={professionals} onAdd={async (p) => { await db.table('professionals').insert(p); fetchInitialData(user?.id!) }} />;
+      case 'inactivation': return <InactivationPage {...props} inactivations={inactivations} onAdd={async (d) => { await db.table('blocked_dates').insert({...d, professional_id: user?.id}); fetchInitialData(user?.id!) }} onDelete={async (id) => { await db.table('blocked_dates').delete(id); fetchInitialData(user?.id!) }} />;
+      case 'recurring': return <RecurringPage {...props} />;
+      case 'apps': return <AppsPage {...props} />;
       case 'login': return <AuthView type="login" onAuth={() => fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('signup')} />;
       case 'signup': return <AuthView type="signup" onAuth={() => fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('login')} />;
       case 'landing': default: return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;

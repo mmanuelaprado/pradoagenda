@@ -24,6 +24,8 @@
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior-y: contain;
         background-color: #f9fafb;
+        margin: 0;
+        padding: 0;
       }
       .pt-safe { padding-top: var(--safe-area-inset-top); }
       .pb-safe { padding-bottom: var(--safe-area-inset-bottom); }
@@ -38,7 +40,9 @@
       #root { min-height: 100vh; display: flex; flex-direction: column; }
     </style>
     <script>
+      // Polyfill para process.env e global para compatibilidade com bibliotecas ESM
       window.process = { env: { API_KEY: "" } };
+      window.global = window;
     </script>
     <script type="importmap">
     {
@@ -63,14 +67,14 @@
         if (!isProxy) {
           const manifestLink = document.createElement('link');
           manifestLink.rel = 'manifest';
-          manifestLink.href = 'manifest.json';
+          manifestLink.href = '/manifest.json';
           document.head.appendChild(manifestLink);
 
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-              navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('SW ok'))
-                .catch(err => console.debug('SW fail'));
+              navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('PWA Service Worker registrado'))
+                .catch(err => console.debug('Falha ao registrar PWA Service Worker'));
             });
           }
         }
