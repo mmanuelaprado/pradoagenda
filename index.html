@@ -37,20 +37,16 @@
       #root { min-height: 100vh; display: flex; flex-direction: column; }
     </style>
     <script>
-      // Polyfill essencial para bibliotecas que esperam ambiente Node ou variáveis globais
       window.process = { env: { API_KEY: "" } };
       window.global = window;
       
-      // Capturador de erro global para diagnosticar tela branca
       window.onerror = function(message, source, lineno, colno, error) {
         const root = document.getElementById('root');
         if (root && root.innerHTML === "") {
-          root.innerHTML = `<div style="padding: 20px; color: red; font-family: sans-serif;">
-            <h2>Erro de Carregamento</h2>
-            <p>${message}</p>
-            <small>${source}:${lineno}</small>
-            <br><br>
-            <button onclick="window.location.reload()" style="padding: 10px 20px; background: #FF1493; color: white; border: none; border-radius: 8px;">Recarregar</button>
+          root.innerHTML = `<div style="padding: 40px; text-align: center; font-family: sans-serif;">
+            <h2 style="color: #FF1493;">Erro de Inicialização</h2>
+            <p style="color: #666;">${message}</p>
+            <button onclick="window.location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #FF1493; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Recarregar Sistema</button>
           </div>`;
         }
       };
@@ -72,26 +68,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
-    <script>
-      (function() {
-        const isProxy = window.location.hostname.includes('ai.studio') || 
-                        window.location.hostname.includes('usercontent.goog');
-        
-        if (!isProxy) {
-          const manifestLink = document.createElement('link');
-          manifestLink.rel = 'manifest';
-          manifestLink.href = '/manifest.json';
-          document.head.appendChild(manifestLink);
-
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-              navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('PWA Service Worker registrado'))
-                .catch(err => console.debug('Falha ao registrar PWA Service Worker'));
-            });
-          }
-        }
-      })();
-    </script>
   </body>
 </html>
