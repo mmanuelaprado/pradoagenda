@@ -15,25 +15,39 @@ root.render(
   </React.StrictMode>
 );
 
-// Registro resiliente do Service Worker para PWA
+// Registro robusto do Service Worker para PWA (Google Play / Android)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      // Verifica se estamos em localhost ou domínio seguro para evitar erros de origem em previews
-      const isLocalhost = Boolean(
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '[::1]' ||
-        window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
-      );
-
-      // Só tenta registrar se não estiver em um frame restrito ou se for HTTPS
-      if (window.location.protocol === 'https:' || isLocalhost) {
-        const registration = await navigator.serviceWorker.register('./sw.js');
-        console.log('SW registrado com sucesso:', registration.scope);
-      }
-    } catch (error) {
-      // Silencia erros de origem em ambientes de desenvolvimento (Studio/Frames)
-      console.warn('Registro de Service Worker ignorado neste ambiente:', error);
-    }
+  window.addEventListener('load', () => {
+    const swPath = './sw.js';
+    navigator.serviceWorker
+      .register(swPath)
+      .then((registration) => {
+        console.log('PWA: Service Worker registrado com escopo:', registration.scope);
+        
+        // Verifica atualizações do SW
+        registration.onupdatefound = () => {
+          const installingWorker = registration.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed') {
+                if (navigator.serviceWorker.controller) {
+                  console.log('PWA: Nova versão disponível! Por favor, recarregue.');
+                } else {
+                  console.log('PWA: Conteúdo cacheado para uso offline.');
+                }
+              }
+            };
+          }
+        };
+      })
+      .catch((error) => {
+        console.error('PWA: Erro no registro do Service Worker:', error);
+      });
   });
 }
+
+// Escuta evento de instalação (Prompt)
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Opcional: Salvar o evento para disparar o prompt em um botão personalizado
+  console.log('PWA: Aplicativo pronto para instalação.');
+});

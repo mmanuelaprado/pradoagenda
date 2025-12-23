@@ -1,24 +1,55 @@
 
 {
-  "name": "Prado Agenda",
-  "short_name": "Prado",
-  "description": "Sistema profissional de agendamento online para beleza.",
-  "start_url": ".",
+  "name": "Prado Agenda - Gestão de Beleza",
+  "short_name": "Prado Agenda",
+  "description": "Sistema profissional de agendamento online para especialistas em beleza.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#FF1493",
   "orientation": "portrait",
+  "categories": ["business", "beauty", "productivity"],
   "icons": [
     {
       "src": "favicon/favicon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "favicon/favicon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "favicon/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "favicon/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Prado Agenda Dashboard"
+    },
+    {
+      "src": "favicon/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Prado Agenda Mobile"
     }
   ]
 }
