@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Professional, Service, Appointment, Client, BusinessConfig } from './types.ts';
 import { db, generateSlug } from './services/db.ts';
@@ -70,12 +69,7 @@ const App: React.FC = () => {
         }
       } catch (err: any) {
         console.error("Erro de inicialização:", err);
-        const errMsg = err.message || JSON.stringify(err);
-        if (errMsg.includes("relation") || errMsg.includes("cache") || errMsg.includes("found")) {
-          setDbError("As tabelas do banco de dados ainda não foram criadas ou estão incompletas. Execute o script SQL no painel do Supabase.");
-        } else {
-          setDbError(errMsg);
-        }
+        setDbError("Ocorreu um erro ao carregar o sistema. Verifique sua conexão.");
         setIsLoading(false);
       }
     };
@@ -113,8 +107,6 @@ const App: React.FC = () => {
         ]);
 
         setServices(svs);
-        
-        // Normalização de agendamentos
         setAppointments(appts.map((a: any) => ({
           ...a,
           clientName: a.client_name || a.clientName,
@@ -128,11 +120,7 @@ const App: React.FC = () => {
           lastVisit: c.last_visit
         })));
 
-        setBusinessConfig(config ? {
-          ...config,
-          themeColor: config.theme_color
-        } : null);
-
+        setBusinessConfig(config ? { ...config, themeColor: config.theme_color } : null);
         setInactivations(blocks);
         setProfessionals(pros);
         if (['landing', 'login', 'signup'].includes(currentView)) navigate('dashboard');
@@ -141,12 +129,7 @@ const App: React.FC = () => {
       }
     } catch (e: any) {
       console.error("Erro ao sincronizar:", e);
-      const errMsg = e.message || JSON.stringify(e);
-      if (errMsg.includes("relation")) {
-        setDbError("Tabelas não encontradas no Supabase. Execute o script de criação no SQL Editor.");
-      } else {
-        setDbError(errMsg);
-      }
+      setDbError("Falha na sincronização de dados. Tente atualizar a página.");
     } finally {
       setIsLoading(false);
     }
@@ -216,15 +199,12 @@ const App: React.FC = () => {
       ]);
       setPublicServices(svs);
       setPublicConfig(config ? { ...config, themeColor: config.theme_color } : { interval: 60, expediente: [] });
-      
-      // Normalização de agendamentos para visualização pública (essencial para cálculo de disponibilidade)
       setPublicAppointments(appts.map((a: any) => ({
         ...a,
         clientName: a.client_name || a.clientName,
         clientPhone: a.client_phone || a.clientPhone,
         serviceId: a.service_id || a.serviceId
       })));
-
       setPublicInactivations(blocks);
       setIsPublicView(true);
       setCurrentView('booking');
@@ -236,26 +216,14 @@ const App: React.FC = () => {
 
   if (dbError) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6 text-center">
-      <div className="max-w-md bg-white p-10 rounded-[3rem] shadow-xl border border-red-50">
-        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <Icons.Ban className="w-8 h-8" />
+      <div className="max-w-xs bg-white p-8 rounded-[2rem] shadow-xl border border-red-50">
+        <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Icons.Ban className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-black text-black uppercase mb-4 tracking-tight">Erro de Banco de Dados</h2>
-        <div className="bg-gray-50 p-4 rounded-xl mb-8 overflow-hidden">
-          <p className="text-gray-500 text-xs font-mono break-all">{dbError}</p>
-        </div>
-        <button 
-          onClick={() => { setDbError(null); setIsLoading(true); window.location.reload(); }} 
-          className="w-full bg-[#FF1493] text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg hover:bg-pink-700 transition-all mb-4"
-        >
-          Tentar Novamente
-        </button>
-        <button 
-          onClick={handleLogout}
-          className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-gray-200 transition-all"
-        >
-          Limpar Sessão (Sair)
-        </button>
+        <h2 className="text-lg font-black text-black uppercase mb-2 tracking-tight">Falha no Sistema</h2>
+        <p className="text-gray-400 text-[10px] font-medium mb-6 leading-relaxed">{dbError}</p>
+        <button onClick={() => window.location.reload()} className="w-full bg-[#FF1493] text-white py-4 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg mb-3">Tentar Novamente</button>
+        <button onClick={handleLogout} className="w-full bg-gray-100 text-gray-500 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest">Sair</button>
       </div>
     </div>
   );
@@ -263,21 +231,15 @@ const App: React.FC = () => {
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sincronizando com Supabase...</p>
+        <div className="w-10 h-10 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Sincronizando Dados...</p>
       </div>
     </div>
   );
 
   const renderViewContent = () => {
     if (isPublicView && publicProfessional) {
-      return (
-        <BookingPage 
-          professional={publicProfessional} services={publicServices} config={publicConfig} 
-          appointments={publicAppointments} inactivations={publicInactivations} 
-          onComplete={handleSaveAppointment} onHome={() => window.location.href = window.location.origin} 
-        />
-      );
+      return <BookingPage professional={publicProfessional} services={publicServices} config={publicConfig} appointments={publicAppointments} inactivations={publicInactivations} onComplete={handleSaveAppointment} onHome={() => window.location.href = window.location.origin} />;
     }
     
     const commonProps = { user, onLogout: handleLogout, navigate };
@@ -306,7 +268,7 @@ const App: React.FC = () => {
       {user && !isPublicView && <Sidebar activeView={currentView} navigate={navigate} onLogout={handleLogout} />}
       <div className="flex-grow flex flex-col relative h-full">
         {user && !isPublicView && <MobileHeader user={user} navigate={navigate} onLogout={handleLogout} />}
-        <div className="flex-grow pb-20 md:pb-12 overflow-y-auto custom-scrollbar">
+        <div className="flex-grow pb-16 md:pb-12 overflow-y-auto custom-scrollbar">
           {renderViewContent()}
         </div>
         {user && !isPublicView && <BottomNav activeView={currentView} navigate={navigate} />}
