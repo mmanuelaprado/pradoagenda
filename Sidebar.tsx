@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Icons } from './constants.tsx';
 import { View } from './types.ts';
@@ -13,21 +14,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => 
     { view: 'dashboard', icon: Icons.Home, label: 'Início' },
     { view: 'agenda', icon: Icons.Calendar, label: 'Agenda' },
     { view: 'clients', icon: Icons.Users, label: 'Clientes' },
+    { view: 'marketing', icon: Icons.Brain, label: 'Marketing AI' },
     { view: 'services', icon: Icons.Scissors, label: 'Serviços' },
     { view: 'professionals', icon: Icons.Users, label: 'Profissionais' },
     { view: 'finance', icon: Icons.Finance, label: 'Financeiro' },
-    { view: 'recurring', icon: Icons.Repeat, label: 'Recorrente' },
-    { view: 'inactivation', icon: Icons.Ban, label: 'Inativação' },
-    { view: 'company', icon: Icons.Building, label: 'Empresa' },
-    { view: 'settings', icon: Icons.Settings, label: 'Ajustes' },
-    { view: 'apps', icon: Icons.Smartphone, label: 'Baixar App' },
+    { view: 'recurring', icon: Icons.Repeat, label: 'Agendamento recorrente' },
+    { view: 'inactivation', icon: Icons.Ban, label: 'Inativação de horários' },
+    { view: 'company', icon: Icons.Building, label: 'Minha empresa' },
+    { view: 'settings', icon: Icons.Settings, label: 'Configurações' },
+    { view: 'apps', icon: Icons.Smartphone, label: 'Baixar Apps' },
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-black text-white p-6 sticky top-0 h-screen overflow-y-auto custom-scrollbar border-r border-white/5 flex-shrink-0">
+    <aside className="hidden md:flex flex-col w-72 bg-black text-white p-6 sticky top-0 h-screen overflow-y-auto custom-scrollbar border-r border-white/5 flex-shrink-0">
       <div className="flex items-center space-x-2 mb-10 px-2 cursor-pointer" onClick={() => navigate('dashboard')}>
         <div className="w-8 h-8 bg-[#FF1493] rounded-lg flex items-center justify-center font-bold">P</div>
-        <span className="text-lg font-bold tracking-tight">Pradoagenda</span>
+        <span className="text-xl font-bold tracking-tight">Pradoagenda</span>
       </div>
       
       <nav className="flex-grow space-y-1">
@@ -42,23 +44,25 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => 
             }`}
           >
             <item.icon />
-            <span className="text-[13px]">{item.label}</span>
+            <span className="text-sm">{item.label}</span>
           </button>
         ))}
       </nav>
 
-      <div className="mt-6 pt-4 border-t border-white/5 space-y-3">
+      <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
         <button 
           onClick={onLogout} 
-          className="w-full flex items-center space-x-3 p-2 text-gray-400 hover:text-red-400 transition-colors"
+          className="w-full flex items-center space-x-3 p-3 text-gray-400 hover:text-red-400 transition-colors"
         >
-          <Icons.Logout className="w-5 h-5" />
-          <span className="font-bold text-[11px] uppercase tracking-widest">Sair</span>
+          <Icons.Logout />
+          <span className="font-bold text-sm uppercase tracking-widest">Sair</span>
         </button>
 
-        <div className="px-3 pb-2 text-center">
-          <p className="text-[8px] font-black text-gray-600 tracking-wider">
-            © 2024 PRADO AGENDA
+        <div className="px-3 py-4 text-center">
+          <p className="text-[8px] font-black text-gray-600 tracking-wider leading-tight">
+            © 2024 Prado Agenda <br/>
+            Desenvolvido por <br/>
+            <span className="text-gray-400">Manuela Prado</span>
           </p>
         </div>
       </div>

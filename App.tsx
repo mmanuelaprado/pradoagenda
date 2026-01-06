@@ -19,6 +19,7 @@ import InactivationPage from './views/InactivationPage.tsx';
 import RecurringPage from './views/RecurringPage.tsx';
 import AppsPage from './views/AppsPage.tsx';
 import ReportsPage from './views/ReportsPage.tsx';
+import MarketingPage from './views/MarketingPage.tsx';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('landing');
@@ -42,8 +43,13 @@ const App: React.FC = () => {
 
   const navigate = useCallback((v: View) => {
     setCurrentView(v);
+    // Safety check for history manipulation in sandboxed environments
     if (v !== 'booking' && window.location.pathname !== '/') {
-      window.history.pushState({}, '', '/');
+      try {
+        window.history.pushState({}, '', '/');
+      } catch (e) {
+        console.debug("Navigation state update skipped due to environment restrictions.");
+      }
     }
     window.scrollTo(0, 0);
   }, []);
@@ -59,7 +65,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       const pathSlug = window.location.pathname.split('/').filter(Boolean)[0];
-      const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps', 'finance'];
+      const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps', 'finance', 'marketing'];
       
       try {
         if (pathSlug && !protectedRoutes.includes(pathSlug) && !pathSlug.includes('.')) {
@@ -68,8 +74,8 @@ const App: React.FC = () => {
           await checkAuthSession();
         }
       } catch (err: any) {
-        console.error("Erro de inicialização:", err);
-        setDbError("Ocorreu um erro ao carregar o sistema. Verifique sua conexão.");
+        console.error("Initialization error:", err);
+        setDbError(err.message || "Failed to initialize application.");
         setIsLoading(false);
       }
     };
@@ -113,14 +119,15 @@ const App: React.FC = () => {
           clientPhone: a.client_phone || a.clientPhone,
           serviceId: a.service_id || a.serviceId
         })));
-
         setClients(cls.map((c: any) => ({
           ...c,
           totalBookings: c.total_bookings,
           lastVisit: c.last_visit
         })));
-
-        setBusinessConfig(config ? { ...config, themeColor: config.theme_color } : null);
+        setBusinessConfig(config ? {
+          ...config,
+          themeColor: config.theme_color
+        } : null);
         setInactivations(blocks);
         setProfessionals(pros);
         if (['landing', 'login', 'signup'].includes(currentView)) navigate('dashboard');
@@ -128,8 +135,9 @@ const App: React.FC = () => {
         handleLogout();
       }
     } catch (e: any) {
-      console.error("Erro ao sincronizar:", e);
-      setDbError("Falha na sincronização de dados. Tente atualizar a página.");
+      console.error("Sync error:", e);
+      setDbError("Erro ao sincronizar dados. Tentando novamente...");
+      setTimeout(() => window.location.reload(), 3000);
     } finally {
       setIsLoading(false);
     }
@@ -214,61 +222,114 @@ const App: React.FC = () => {
     setIsLoading(false);
   };
 
-  if (dbError) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6 text-center">
-      <div className="max-w-xs bg-white p-8 rounded-[2rem] shadow-xl border border-red-50">
-        <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <Icons.Ban className="w-6 h-6" />
-        </div>
-        <h2 className="text-lg font-black text-black uppercase mb-2 tracking-tight">Falha no Sistema</h2>
-        <p className="text-gray-400 text-[10px] font-medium mb-6 leading-relaxed">{dbError}</p>
-        <button onClick={() => window.location.reload()} className="w-full bg-[#FF1493] text-white py-4 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg mb-3">Tentar Novamente</button>
-        <button onClick={handleLogout} className="w-full bg-gray-100 text-gray-500 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest">Sair</button>
-      </div>
-    </div>
-  );
-
-  if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Sincronizando Dados...</p>
-      </div>
-    </div>
-  );
-
   const renderViewContent = () => {
     if (isPublicView && publicProfessional) {
-      return <BookingPage professional={publicProfessional} services={publicServices} config={publicConfig} appointments={publicAppointments} inactivations={publicInactivations} onComplete={handleSaveAppointment} onHome={() => window.location.href = window.location.origin} />;
+      return (
+        <BookingPage 
+          professional={publicProfessional} services={publicServices} config={publicConfig} 
+          appointments={publicAppointments} inactivations={publicInactivations} 
+          onComplete={handleSaveAppointment} onHome={() => window.location.href = window.location.origin} 
+        />
+      );
     }
     
     const commonProps = { user, onLogout: handleLogout, navigate };
-    
+
     switch (currentView) {
-      case 'dashboard': return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} config={businessConfig} />;
-      case 'agenda': return <AgendaPage {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} onAddManualAppointment={handleSaveAppointment} inactivations={inactivations} config={businessConfig} />;
-      case 'services': return <ServicesPage {...commonProps} services={services} onAdd={async (s) => { await db.table('services').insert({ ...s, professional_id: user?.id }); await fetchInitialData(user?.id!) }} onDelete={async (id) => { await db.table('services').delete(id); await fetchInitialData(user?.id!) }} onToggle={async (id) => { const s = services.find(sv => sv.id === id); await db.table('services').update(id, { active: !s?.active }); await fetchInitialData(user?.id!) }} />;
-      case 'clients': return <ClientsPage {...commonProps} clients={clients} appointments={appointments} />;
-      case 'company': return <ProfilePage {...commonProps} onUpdate={async (u) => { await db.table('professionals').update(user?.id!, { ...u, business_name: u.businessName }); await fetchInitialData(user?.id!); return true; }} />;
-      case 'settings': return <SettingsPage {...commonProps} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={handleUpdateConfig} />;
-      case 'finance': return <ReportsPage {...commonProps} appointments={appointments} services={services} config={businessConfig} />;
-      case 'professionals': return <ProfessionalsPage {...commonProps} professionals={professionals} onAdd={async (p) => { await db.table('professionals').insert(p); await fetchInitialData(user?.id!) }} />;
-      case 'inactivation': return <InactivationPage {...commonProps} inactivations={inactivations} onAdd={async (d) => { await db.table('blocked_dates').insert({...d, professional_id: user?.id}); await fetchInitialData(user?.id!) }} onDelete={async (id) => { await db.table('blocked_dates').delete(id); await fetchInitialData(user?.id!) }} />;
-      case 'recurring': return <RecurringPage {...commonProps} />;
-      case 'apps': return <AppsPage {...commonProps} />;
-      case 'login': return <AuthView type="login" onAuth={async () => await fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('signup')} />;
-      case 'signup': return <AuthView type="signup" onAuth={async () => await fetchInitialData(db.auth.getSession()?.user.id)} onToggle={() => navigate('login')} />;
-      case 'landing': return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
-      default: return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
+      case 'landing':
+        return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
+      case 'login':
+        return <AuthView type="login" onAuth={() => checkAuthSession()} onToggle={() => navigate('signup')} />;
+      case 'signup':
+        return <AuthView type="signup" onAuth={() => checkAuthSession()} onToggle={() => navigate('login')} />;
+      case 'dashboard':
+        return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} config={businessConfig} />;
+      case 'agenda':
+        return <AgendaPage {...commonProps} appointments={appointments} services={services} onAddManualAppointment={handleSaveAppointment} onUpdateStatus={handleUpdateStatus} inactivations={inactivations} config={businessConfig} />;
+      case 'services':
+        return (
+          <ServicesPage 
+            {...commonProps} services={services} 
+            onAdd={async (s) => { await db.table('services').insert({ ...s, professional_id: user?.id }); fetchInitialData(user!.id); }} 
+            onToggle={async (id) => { const s = services.find(x => x.id === id); await db.table('services').update(id, { active: !s?.active }); fetchInitialData(user!.id); }}
+            onDelete={async (id) => { await db.table('services').delete(id); fetchInitialData(user!.id); }}
+          />
+        );
+      case 'clients':
+        return <ClientsPage {...commonProps} clients={clients} appointments={appointments} />;
+      case 'marketing':
+        return <MarketingPage {...commonProps} services={services} />;
+      case 'company':
+        return (
+          <ProfilePage 
+            {...commonProps} 
+            onUpdate={async (u) => { 
+              const { businessName, ...rest } = u;
+              await db.table('professionals').update(user!.id!, { ...rest, business_name: businessName }); 
+              fetchInitialData(user!.id!); 
+              return true; 
+            }} 
+          />
+        );
+      case 'settings':
+        return <SettingsPage {...commonProps} config={businessConfig || { interval: 60, expediente: [] }} onUpdateConfig={handleUpdateConfig} />;
+      case 'professionals':
+        return <ProfessionalsPage {...commonProps} professionals={professionals} onAdd={async (p) => { await db.table('professionals').insert(p); fetchInitialData(user!.id!); }} />;
+      case 'finance':
+        return <ReportsPage {...commonProps} appointments={appointments} services={services} config={businessConfig} />;
+      case 'inactivation':
+        return (
+          <InactivationPage 
+            {...commonProps} inactivations={inactivations} 
+            onAdd={async (i) => { await db.table('blocked_dates').insert({ ...i, professional_id: user?.id }); fetchInitialData(user!.id!); }} 
+            onDelete={async (id) => { await db.table('blocked_dates').delete(id); fetchInitialData(user!.id!); }}
+          />
+        );
+      case 'recurring':
+        return <RecurringPage {...commonProps} />;
+      case 'apps':
+        return <AppsPage {...commonProps} />;
+      case 'booking':
+        return (
+          <BookingPage 
+            professional={user!} services={services} config={businessConfig || { interval: 60, expediente: [] }} 
+            appointments={appointments} inactivations={inactivations} 
+            onComplete={handleSaveAppointment} onHome={() => navigate('dashboard')} 
+          />
+        );
+      default:
+        return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} config={businessConfig} />;
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <div className="w-12 h-12 border-4 border-[#FF1493] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (dbError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
+          <Icons.Ban />
+        </div>
+        <h2 className="text-xl font-black uppercase mb-2">Ops! Algo deu errado</h2>
+        <p className="text-gray-500 text-sm mb-8">{dbError}</p>
+        <button onClick={() => window.location.reload()} className="bg-black text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest">Tentar Novamente</button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 overflow-hidden relative">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FDFDFD]">
       {user && !isPublicView && <Sidebar activeView={currentView} navigate={navigate} onLogout={handleLogout} />}
-      <div className="flex-grow flex flex-col relative h-full">
+      <div className="flex-grow flex flex-col">
         {user && !isPublicView && <MobileHeader user={user} navigate={navigate} onLogout={handleLogout} />}
-        <div className="flex-grow pb-16 md:pb-12 overflow-y-auto custom-scrollbar">
+        <div className="flex-grow overflow-y-auto">
           {renderViewContent()}
         </div>
         {user && !isPublicView && <BottomNav activeView={currentView} navigate={navigate} />}

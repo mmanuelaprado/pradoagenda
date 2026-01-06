@@ -60,6 +60,7 @@ export type View =
   | 'dashboard' 
   | 'agenda'
   | 'clients' 
+  | 'marketing'
   | 'services' 
   | 'professionals'
   | 'finance'

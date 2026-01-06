@@ -19,11 +19,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services
   const todayStr = new Date().toISOString().split('T')[0];
   const todayAppts = (appointments || []).filter(a => a.date && a.date.startsWith(todayStr));
   
-  // Fix: Using config from props to avoid async call in component body which returned a Promise
   const brandColor = config?.themeColor || '#FF1493';
 
-  const baseDomain = window.location.origin;
-  const publicLink = user?.slug ? `${baseDomain}/${user.slug}` : '';
+  // Usando o domínio oficial conforme solicitado pelo usuário
+  const baseDomain = "pradoagenda.vercel.app";
+  const publicLink = user?.slug ? `https://${baseDomain}/${user.slug}` : '';
 
   const handleCopy = () => {
     if (!publicLink) { navigate('company'); return; }
@@ -37,7 +37,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services
     window.open(`https://wa.me/55${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
   };
 
-  // Faturamento hoje: Confirmados + Concluídos
   const todayRevenue = todayAppts
     .filter(a => a.status === 'confirmed' || a.status === 'completed')
     .reduce((acc, curr) => {
@@ -60,7 +59,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, appointments = [], services
           >
              <div className="flex-grow min-w-0">
                <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Seu Link Público</p>
-               <p className="text-[11px] font-bold text-black truncate">{publicLink.replace(/(^\w+:|^)\/\//, '')}</p>
+               <p className="text-[11px] font-bold text-black truncate">{baseDomain}/{user.slug}</p>
              </div>
              <div className="flex gap-2">
                <button onClick={handleCopy} className={`p-2 rounded-xl transition-all ${copyStatus ? 'bg-green-500 text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}>

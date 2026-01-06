@@ -43,7 +43,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
     }
   };
 
-  const baseDomain = window.location.origin;
+  const baseDomain = "pradoagenda.vercel.app";
 
   const handleSlugChange = (val: string) => {
     setFormData({...formData, slug: generateSlug(val)});
@@ -79,7 +79,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate, onLogout, nav
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[#FF1493]/60 uppercase tracking-widest">Identificador (Slug)</label>
               <div className="flex items-center bg-white border-2 border-pink-100 rounded-2xl px-5 focus-within:border-[#FF1493] transition-all">
-                 <span className="text-gray-300 font-bold mr-1 text-xs md:text-sm">{baseDomain.replace(/(^\w+:|^)\/\//, '')}/</span>
+                 <span className="text-gray-300 font-bold mr-1 text-xs md:text-sm">{baseDomain}/</span>
                  <input 
                   required
                   type="text" 
