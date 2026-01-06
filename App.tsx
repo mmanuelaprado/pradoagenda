@@ -329,7 +329,7 @@ const App: React.FC = () => {
       {user && !isPublicView && <Sidebar activeView={currentView} navigate={navigate} onLogout={handleLogout} />}
       <div className="flex-grow flex flex-col">
         {user && !isPublicView && <MobileHeader user={user} navigate={navigate} onLogout={handleLogout} />}
-        <div className="flex-grow overflow-y-auto">
+        <div className="flex-grow overflow-y-auto pb-safe">
           {renderViewContent()}
         </div>
         {user && !isPublicView && <BottomNav activeView={currentView} navigate={navigate} />}

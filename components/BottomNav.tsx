@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Icons } from '../constants.tsx';
 import { View } from '../types.ts';
@@ -18,7 +17,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, navigate }) => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 flex items-center justify-around px-2 pb-safe pt-2 z-50 h-16">
+    <nav 
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 flex items-center justify-around px-2 pt-2 z-50 transition-all"
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}
+    >
       {navItems.map((item) => {
         const isActive = activeView === item.view;
         return (
