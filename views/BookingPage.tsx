@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Professional, Service, Appointment, BusinessConfig } from '../types.ts';
 import { Icons } from '../constants.tsx';
@@ -139,10 +138,10 @@ const BookingPage: React.FC<BookingPageProps> = ({ professional, services, confi
       `}</style>
 
       <header className="p-6 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center text-white font-bold shadow-lg">P</div>
+        <div className="flex items-center space-x-3 cursor-pointer group" onClick={onHome}>
+          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center text-white font-bold shadow-lg group-active:scale-95 transition-transform">P</div>
           <div>
-            <span className="font-black text-black uppercase tracking-tighter block leading-none">{professional.businessName}</span>
+            <span className="font-black text-black uppercase tracking-tighter block leading-none group-hover:text-brand transition-colors">{professional.businessName}</span>
             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Agendamento Online</span>
           </div>
         </div>

@@ -239,9 +239,9 @@ const App: React.FC = () => {
       case 'landing':
         return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
       case 'login':
-        return <AuthView type="login" onAuth={() => checkAuthSession()} onToggle={() => navigate('signup')} />;
+        return <AuthView type="login" onAuth={() => checkAuthSession()} onToggle={() => navigate('signup')} navigate={navigate} />;
       case 'signup':
-        return <AuthView type="signup" onAuth={() => checkAuthSession()} onToggle={() => navigate('login')} />;
+        return <AuthView type="signup" onAuth={() => checkAuthSession()} onToggle={() => navigate('login')} navigate={navigate} />;
       case 'dashboard':
         return <Dashboard {...commonProps} appointments={appointments} services={services} onUpdateStatus={handleUpdateStatus} config={businessConfig} />;
       case 'agenda':

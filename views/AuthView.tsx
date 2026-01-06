@@ -1,15 +1,15 @@
-
 import React, { useState } from 'react';
 import { db } from '../services/db.ts';
-import { Professional } from '../types';
+import { Professional, View } from '../types';
 
 interface AuthViewProps {
   type: 'login' | 'signup';
   onAuth: (user: Professional) => void;
   onToggle: () => void;
+  navigate: (v: View) => void;
 }
 
-const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
+const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth, navigate }) => {
   const [formData, setFormData] = useState({
     name: '',
     businessName: '',
@@ -68,11 +68,11 @@ const AuthView: React.FC<AuthViewProps> = ({ type, onToggle, onAuth }) => {
       <div className="md:w-2/5 bg-black flex flex-col justify-center p-12 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-pink-600 rounded-full blur-[100px] opacity-20 -translate-y-1/2"></div>
         <div className="max-w-md mx-auto relative z-10">
-          <div className="flex items-center space-x-2 mb-12">
-            <div className="w-10 h-10 bg-[#FF1493] rounded-xl flex items-center justify-center shadow-lg shadow-pink-900/50">
+          <div className="flex items-center space-x-2 mb-12 cursor-pointer group" onClick={() => navigate('landing')}>
+            <div className="w-10 h-10 bg-[#FF1493] rounded-xl flex items-center justify-center shadow-lg shadow-pink-900/50 group-active:scale-95 transition-transform">
               <span className="text-white font-bold text-xl">P</span>
             </div>
-            <span className="text-2xl font-black tracking-tighter uppercase">Pradoagenda</span>
+            <span className="text-2xl font-black tracking-tighter uppercase group-hover:text-[#FF1493] transition-colors">Pradoagenda</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-black mb-6 leading-none tracking-tight">O sistema que sua beleza merece.</h2>
           <p className="text-gray-400 text-lg font-medium">Sincronização em tempo real com Supabase.</p>

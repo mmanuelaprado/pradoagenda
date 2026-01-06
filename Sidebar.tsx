@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Icons } from './constants.tsx';
 import { View } from './types.ts';
@@ -27,9 +26,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, navigate, onLogout }) => 
 
   return (
     <aside className="hidden md:flex flex-col w-72 bg-black text-white p-6 sticky top-0 h-screen overflow-y-auto custom-scrollbar border-r border-white/5 flex-shrink-0">
-      <div className="flex items-center space-x-2 mb-10 px-2 cursor-pointer" onClick={() => navigate('dashboard')}>
-        <div className="w-8 h-8 bg-[#FF1493] rounded-lg flex items-center justify-center font-bold">P</div>
-        <span className="text-xl font-bold tracking-tight">Pradoagenda</span>
+      <div className="flex items-center space-x-2 mb-10 px-2 cursor-pointer group" onClick={() => navigate('landing')}>
+        <div className="w-8 h-8 bg-[#FF1493] rounded-lg flex items-center justify-center font-bold shadow-lg shadow-pink-900/20 group-active:scale-95 transition-transform">P</div>
+        <span className="text-xl font-bold tracking-tight group-hover:text-[#FF1493] transition-colors">Pradoagenda</span>
       </div>
       
       <nav className="flex-grow space-y-1">

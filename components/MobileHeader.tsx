@@ -14,11 +14,11 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ user, navigate, onLogout })
       className="md:hidden bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 pb-4 flex items-center justify-between sticky top-0 z-40 transition-all"
       style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}
     >
-      <div className="flex items-center space-x-2 active:scale-95 transition-transform" onClick={() => navigate('dashboard')}>
+      <div className="flex items-center space-x-2 active:scale-95 transition-transform cursor-pointer group" onClick={() => navigate('landing')}>
         <div className="w-8 h-8 bg-[#FF1493] rounded-lg flex items-center justify-center font-bold shadow-lg shadow-pink-200">
           <span className="text-white text-xs">P</span>
         </div>
-        <span className="font-black text-black text-sm uppercase tracking-tighter">Prado Agenda</span>
+        <span className="font-black text-black text-sm uppercase tracking-tighter group-active:text-[#FF1493]">Prado Agenda</span>
       </div>
       
       <div className="flex items-center space-x-3">
