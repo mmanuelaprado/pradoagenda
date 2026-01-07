@@ -22,7 +22,7 @@ import ReportsPage from './views/ReportsPage.tsx';
 import MarketingPage from './views/MarketingPage.tsx';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<View>('landing');
+  const [currentView, setCurrentView] = useState<View | 'privacy'>('landing');
   const [user, setUser] = useState<Professional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -41,10 +41,9 @@ const App: React.FC = () => {
   const [publicAppointments, setPublicAppointments] = useState<Appointment[]>([]);
   const [publicInactivations, setPublicInactivations] = useState<any[]>([]);
 
-  const navigate = useCallback((v: View) => {
+  const navigate = useCallback((v: View | 'privacy') => {
     setCurrentView(v);
-    // Safety check for history manipulation in sandboxed environments
-    if (v !== 'booking' && window.location.pathname !== '/') {
+    if (v !== 'booking' && v !== 'privacy' && window.location.pathname !== '/') {
       try {
         window.history.pushState({}, '', '/');
       } catch (e) {
@@ -68,7 +67,10 @@ const App: React.FC = () => {
       const protectedRoutes = ['dashboard', 'login', 'signup', 'agenda', 'services', 'clients', 'company', 'settings', 'inactivation', 'recurring', 'apps', 'finance', 'marketing'];
       
       try {
-        if (pathSlug && !protectedRoutes.includes(pathSlug) && !pathSlug.includes('.')) {
+        if (pathSlug === 'privacidade') {
+          setCurrentView('privacy');
+          setIsLoading(false);
+        } else if (pathSlug && !protectedRoutes.includes(pathSlug) && !pathSlug.includes('.')) {
           await handlePublicBooking(pathSlug);
         } else {
           await checkAuthSession();
@@ -223,6 +225,10 @@ const App: React.FC = () => {
   };
 
   const renderViewContent = () => {
+    if (currentView === 'privacy') {
+      return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} forcePrivacy={true} onHome={() => navigate('landing')} />;
+    }
+
     if (isPublicView && publicProfessional) {
       return (
         <BookingPage 

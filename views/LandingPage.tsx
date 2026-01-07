@@ -1,18 +1,36 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icons } from '../constants.tsx';
 
 interface LandingPageProps {
   onStart: () => void;
   onLogin: () => void;
+  forcePrivacy?: boolean;
+  onHome?: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, forcePrivacy = false, onHome }) => {
   const currentHost = "pradoagenda.vercel.app";
-  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(forcePrivacy);
+
+  useEffect(() => {
+    if (forcePrivacy) {
+      setShowPrivacy(true);
+    }
+  }, [forcePrivacy]);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (onHome) {
+      onHome();
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleClosePrivacy = () => {
+    setShowPrivacy(false);
+    if (forcePrivacy && onHome) {
+      onHome();
+    }
   };
 
   return (
@@ -207,7 +225,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
         <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4 md:p-8 animate-fade-in">
           <div className="bg-white w-full max-w-4xl h-[80vh] rounded-[2rem] md:rounded-[4rem] shadow-2xl flex flex-col relative">
             <button 
-              onClick={() => setShowPrivacy(false)}
+              onClick={handleClosePrivacy}
               className="absolute top-6 right-6 md:top-10 md:right-10 w-10 h-10 md:w-14 md:h-14 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center text-black font-bold text-lg md:text-2xl transition-all z-10"
             >
               ✕
@@ -303,7 +321,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
             
             <div className="p-8 md:p-12 bg-gray-50 rounded-b-[2rem] md:rounded-b-[4rem] flex justify-center border-t border-gray-100">
               <button 
-                onClick={() => setShowPrivacy(false)}
+                onClick={handleClosePrivacy}
                 className="bg-black text-white px-12 py-5 rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
               >
                 Entendi e Aceito
