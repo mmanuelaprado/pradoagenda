@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Icons } from '../constants.tsx';
 
 interface LandingPageProps {
@@ -9,16 +9,21 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
   const currentHost = "pradoagenda.vercel.app";
+  const [showPrivacy, setShowPrivacy] = useState(false);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans overflow-x-hidden">
       {/* Navbar Minimalista */}
       <nav className="flex items-center justify-between px-4 md:px-8 py-4 md:py-8 max-w-7xl mx-auto w-full z-20">
-        <div className="flex items-center space-x-2 md:space-x-3">
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-[#FF1493] rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-pink-200">
+        <div className="flex items-center space-x-2 md:space-x-3 cursor-pointer group" onClick={scrollToTop}>
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-[#FF1493] rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-pink-200 group-active:scale-95 transition-transform">
             <span className="text-white font-black text-lg md:text-xl">P</span>
           </div>
-          <span className="text-lg md:text-2xl font-black tracking-tighter text-black uppercase">Prado Agenda</span>
+          <span className="text-lg md:text-2xl font-black tracking-tighter text-black uppercase group-hover:text-[#FF1493] transition-colors">Prado Agenda</span>
         </div>
         <div className="flex items-center space-x-4 md:space-x-8">
           <button onClick={onLogin} className="text-black font-black text-[9px] md:text-[10px] uppercase tracking-widest hover:text-[#FF1493] transition-colors">Entrar</button>
@@ -163,10 +168,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
         
         <div className="max-w-4xl mx-auto px-6 relative z-10">
           <div className="flex flex-col items-center mb-10">
-            <div className="w-12 h-12 bg-[#FF1493] rounded-2xl flex items-center justify-center shadow-2xl shadow-pink-900/40 mb-6">
+            <div className="w-12 h-12 bg-[#FF1493] rounded-2xl flex items-center justify-center shadow-2xl shadow-pink-900/40 mb-6 cursor-pointer group active:scale-95 transition-transform" onClick={scrollToTop}>
               <span className="text-white font-black text-xl">P</span>
             </div>
-            <h2 className="text-white font-black text-xl uppercase tracking-tighter mb-2">Prado Agenda</h2>
+            <h2 className="text-white font-black text-xl uppercase tracking-tighter mb-2 cursor-pointer group hover:text-[#FF1493] transition-colors" onClick={scrollToTop}>Prado Agenda</h2>
             <p className="text-gray-500 text-xs font-medium uppercase tracking-[0.3em]">Gestão de agendamento Inteligente</p>
           </div>
 
@@ -180,7 +185,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
               <Icons.Instagram className="w-4 h-4" />
               <span>Instagram @pradosocial</span>
             </a>
-            <button className="text-gray-400 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest">Privacidade</button>
+            <button 
+              onClick={() => setShowPrivacy(true)}
+              className="text-gray-400 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest"
+            >
+              Privacidade
+            </button>
           </div>
 
           <div className="border-t border-white/5 pt-10">
@@ -191,6 +201,117 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
           </div>
         </div>
       </footer>
+
+      {/* Modal de Privacidade */}
+      {showPrivacy && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] flex items-center justify-center p-4 md:p-8 animate-fade-in">
+          <div className="bg-white w-full max-w-4xl h-[80vh] rounded-[2rem] md:rounded-[4rem] shadow-2xl flex flex-col relative">
+            <button 
+              onClick={() => setShowPrivacy(false)}
+              className="absolute top-6 right-6 md:top-10 md:right-10 w-10 h-10 md:w-14 md:h-14 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center text-black font-bold text-lg md:text-2xl transition-all z-10"
+            >
+              ✕
+            </button>
+            
+            <div className="p-8 md:p-16 overflow-y-auto custom-scrollbar">
+              <div className="max-w-2xl mx-auto">
+                <div className="flex items-center space-x-4 mb-10">
+                  <div className="w-12 h-12 bg-[#FF1493] rounded-2xl flex items-center justify-center text-white font-black text-xl">P</div>
+                  <h2 className="text-2xl md:text-4xl font-black text-black uppercase tracking-tight">Política de Privacidade</h2>
+                </div>
+                
+                <div className="prose prose-pink max-w-none text-gray-600 font-medium leading-relaxed space-y-8">
+                  <p className="text-sm font-black text-[#FF1493] uppercase tracking-widest bg-pink-50 inline-block px-4 py-2 rounded-full">
+                    Última atualização: 07 de JANEIRO DE 2026.
+                  </p>
+                  
+                  <p>O aplicativo Prado Agenda tem o compromisso de proteger a privacidade e os dados pessoais de seus usuários. Esta Política de Privacidade explica como coletamos, utilizamos, armazenamos e protegemos as informações fornecidas durante o uso do aplicativo.</p>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">1. Informações coletadas</h3>
+                    <p>O Prado Agenda pode coletar as seguintes informações:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>Nome do usuário</li>
+                      <li>Número de telefone</li>
+                      <li>Endereço de e-mail</li>
+                      <li>Informações relacionadas a agendamentos (datas, horários e serviços)</li>
+                      <li>Dados básicos de uso do aplicativo</li>
+                    </ul>
+                    <p>As informações são fornecidas voluntariamente pelo usuário ao utilizar as funcionalidades do app.</p>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">2. Finalidade do uso dos dados</h3>
+                    <p>Os dados coletados são utilizados para:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>Permitir o funcionamento correto do sistema de agendamento</li>
+                      <li>Identificar usuários dentro da plataforma</li>
+                      <li>Facilitar a comunicação entre profissionais e clientes</li>
+                      <li>Melhorar a experiência do usuário</li>
+                      <li>Garantir segurança e estabilidade do aplicativo</li>
+                    </ul>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">3. Compartilhamento de informações</h3>
+                    <p>O Prado Agenda não vende, aluga ou comercializa dados pessoais dos usuários. As informações poderão ser compartilhadas apenas:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>Quando necessário para o funcionamento do aplicativo</li>
+                      <li>Para cumprimento de obrigações legais ou determinações judiciais</li>
+                      <li>Com serviços de terceiros essenciais ao funcionamento do app (ex.: hospedagem, autenticação ou análise de desempenho)</li>
+                    </ul>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">4. Uso de serviços de terceiros</h3>
+                    <p>O aplicativo pode utilizar serviços de terceiros, como ferramentas de análise e infraestrutura (ex.: Firebase), que podem coletar dados de forma automática para garantir o desempenho e a segurança do app. Esses serviços seguem suas próprias políticas de privacidade.</p>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">5. Segurança dos dados</h3>
+                    <p>Adotamos medidas técnicas e administrativas adequadas para proteger os dados pessoais contra acesso não autorizado, perda, alteração ou divulgação indevida.</p>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">6. Direitos do usuário</h3>
+                    <p>O usuário tem direito de: acessar seus dados pessoais, solicitar correção ou atualização, solicitar a exclusão de seus dados e revogar consentimentos. Essas solicitações podem ser feitas por meio do contato informado nesta política.</p>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">7. Retenção de dados</h3>
+                    <p>Os dados pessoais são armazenados apenas pelo tempo necessário para cumprir as finalidades descritas nesta Política, respeitando obrigações legais aplicáveis.</p>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">8. Privacidade de menores</h3>
+                    <p>O Prado Agenda não é destinado a menores de 13 anos. Não coletamos intencionalmente dados de crianças.</p>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">9. Alterações nesta Política de Privacidade</h3>
+                    <p>Esta Política de Privacidade pode ser atualizada periodicamente. Recomendamos que o usuário revise este documento regularmente.</p>
+                  </section>
+
+                  <section className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-4">
+                    <h3 className="text-black font-black uppercase text-lg tracking-tight">10. Contato</h3>
+                    <p>Em caso de dúvidas sobre esta Política de Privacidade ou sobre o tratamento de dados, entre em contato:</p>
+                    <p className="font-black text-black">📧 E-mail: <span className="text-[#FF1493]">agenciapradosocial@gmail.com</span></p>
+                  </section>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-8 md:p-12 bg-gray-50 rounded-b-[2rem] md:rounded-b-[4rem] flex justify-center border-t border-gray-100">
+              <button 
+                onClick={() => setShowPrivacy(false)}
+                className="bg-black text-white px-12 py-5 rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
+              >
+                Entendi e Aceito
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes float {
