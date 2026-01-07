@@ -69,7 +69,8 @@ export type View =
   | 'company'
   | 'settings'
   | 'apps'
-  | 'booking';
+  | 'booking'
+  | 'contact';
 
 // Utilitário para detecção de plataforma nativa
 export const isNative = () => {

@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../constants.tsx';
 
 interface LandingPageProps {
   onStart: () => void;
   onLogin: () => void;
+  onContact?: () => void;
   forcePrivacy?: boolean;
   onHome?: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, forcePrivacy = false, onHome }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onContact, forcePrivacy = false, onHome }) => {
   const currentHost = "pradoagenda.vercel.app";
   const [showPrivacy, setShowPrivacy] = useState(forcePrivacy);
 
@@ -209,6 +211,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, forcePrivac
             >
               Privacidade
             </button>
+            <button 
+              onClick={onContact}
+              className="text-gray-400 hover:text-white transition-colors font-black text-[10px] uppercase tracking-widest"
+            >
+              Contato
+            </button>
           </div>
 
           <div className="border-t border-white/5 pt-10">
@@ -307,7 +315,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, forcePrivac
 
                   <section className="space-y-4">
                     <h3 className="text-black font-black uppercase text-lg tracking-tight">9. Alterações nesta Política de Privacidade</h3>
-                    <p>Esta Política de Privacidade pode ser atualizada periodicamente. Recomendamos que o usuário revise este documento regularmente.</p>
+                    <p>Esta Política de Privacidade pode be atualizada periodicamente. Recomendamos que o usuário revise este documento regularmente.</p>
                   </section>
 
                   <section className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-4">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Professional, Service, Appointment, Client, BusinessConfig } from './types.ts';
 import { db, generateSlug } from './services/db.ts';
@@ -20,9 +21,10 @@ import RecurringPage from './views/RecurringPage.tsx';
 import AppsPage from './views/AppsPage.tsx';
 import ReportsPage from './views/ReportsPage.tsx';
 import MarketingPage from './views/MarketingPage.tsx';
+import ContactView from './views/ContactView.tsx';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<View | 'privacy'>('landing');
+  const [currentView, setCurrentView] = useState<View | 'privacy' | 'contact'>('landing');
   const [user, setUser] = useState<Professional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -41,9 +43,9 @@ const App: React.FC = () => {
   const [publicAppointments, setPublicAppointments] = useState<Appointment[]>([]);
   const [publicInactivations, setPublicInactivations] = useState<any[]>([]);
 
-  const navigate = useCallback((v: View | 'privacy') => {
+  const navigate = useCallback((v: View | 'privacy' | 'contact') => {
     setCurrentView(v);
-    if (v !== 'booking' && v !== 'privacy' && window.location.pathname !== '/') {
+    if (v !== 'booking' && v !== 'privacy' && v !== 'contact' && window.location.pathname !== '/') {
       try {
         window.history.pushState({}, '', '/');
       } catch (e) {
@@ -69,6 +71,9 @@ const App: React.FC = () => {
       try {
         if (pathSlug === 'privacidade') {
           setCurrentView('privacy');
+          setIsLoading(false);
+        } else if (pathSlug === 'contato') {
+          setCurrentView('contact');
           setIsLoading(false);
         } else if (pathSlug && !protectedRoutes.includes(pathSlug) && !pathSlug.includes('.')) {
           await handlePublicBooking(pathSlug);
@@ -228,6 +233,9 @@ const App: React.FC = () => {
     if (currentView === 'privacy') {
       return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} forcePrivacy={true} onHome={() => navigate('landing')} />;
     }
+    if (currentView === 'contact') {
+      return <ContactView onHome={() => navigate('landing')} />;
+    }
 
     if (isPublicView && publicProfessional) {
       return (
@@ -243,7 +251,7 @@ const App: React.FC = () => {
 
     switch (currentView) {
       case 'landing':
-        return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} />;
+        return <LandingPage onStart={() => navigate('signup')} onLogin={() => navigate('login')} onContact={() => navigate('contact')} />;
       case 'login':
         return <AuthView type="login" onAuth={() => checkAuthSession()} onToggle={() => navigate('signup')} navigate={navigate} />;
       case 'signup':
